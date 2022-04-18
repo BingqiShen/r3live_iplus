@@ -157,7 +157,7 @@ std::mutex g_imu_premutex;
 StatesGroup ImuProcess::imu_preintegration( const StatesGroup &state_in, std::deque< sensor_msgs::Imu::ConstPtr > &v_imu, double end_pose_dt )
 {
     std::unique_lock< std::mutex > lock( g_imu_premutex );
-    StatesGroup                    state_inout = state_in;
+    StatesGroup state_inout = state_in;
     if ( check_state( state_inout ) )
     {
         state_inout.display( state_inout, "state_inout" );
@@ -304,11 +304,22 @@ StatesGroup ImuProcess::imu_preintegration( const StatesGroup &state_in, std::de
     return state_inout;
 }
 
+// IMU预积分，并进行点云补偿
 void ImuProcess::lic_point_cloud_undistort( const MeasureGroup &meas, const StatesGroup &_state_inout, PointCloudXYZINormal &pcl_out )
 {
+    /*
+    IMU预积分
+    把堆积的IMU数据进行预积分处理，推导出每个IMU数据时刻相对于全局坐标系的T，以及对应的方差。
+    每次开始之前，都会把上一次预积分的最后一个IMU加入到本次IMU队列的头部，以及对应的姿态结果作为此次预积分的开始姿态。
+    这种推理会导致IMU推理的轨迹飞的很快，但是不影响我们总的结果，因为我们取的是短时间内的相对运动姿态。
+    这里IMU的预积分使用中值积分。
+    */
+
+    /* 数据准备 */
+    /*** add the imu of the last frame-tail to the of current frame-head ***/
     StatesGroup state_inout = _state_inout;
-    auto        v_imu = meas.imu;
-    v_imu.push_front( last_imu_ );
+    auto v_imu = meas.imu;
+    v_imu.push_front( last_imu_ ); // 让IMU的时间能包住激光的时间
     const double &imu_end_time = v_imu.back()->header.stamp.toSec();
     const double &pcl_beg_time = meas.lidar_beg_time;
     /*** sort point clouds by offset time ***/
@@ -319,11 +330,13 @@ void ImuProcess::lic_point_cloud_undistort( const MeasureGroup &meas, const Stat
               << meas.imu.size() << " imu msgs from " << imu_beg_time- g_lidar_star_tim << " to " << imu_end_time- g_lidar_star_tim
               << ", last tim: " << state_inout.last_update_time- g_lidar_star_tim << std::endl;
     */
+
     /*** Initialize IMU pose ***/
     IMU_pose.clear();
     // IMUpose.push_back(set_pose6d(0.0, Zero3d, Zero3d, state.vel_end, state.pos_end, state.rot_end));
     IMU_pose.push_back( set_pose6d( 0.0, acc_s_last, angvel_last, state_inout.vel_end, state_inout.pos_end, state_inout.rot_end ) );
 
+    /* 预积分过程 */
     /*** forward propagation at each imu point ***/
     Eigen::Vector3d acc_imu, angvel_avr, acc_avr, vel_imu( state_inout.vel_end ), pos_imu( state_inout.pos_end );
     Eigen::Matrix3d R_imu( state_inout.rot_end );
@@ -332,6 +345,7 @@ void ImuProcess::lic_point_cloud_undistort( const MeasureGroup &meas, const Stat
     double          dt = 0;
     for ( auto it_imu = v_imu.begin(); it_imu != ( v_imu.end() - 1 ); it_imu++ )
     {
+        // 中值积分
         auto &&head = *( it_imu );
         auto &&tail = *( it_imu + 1 );
 
@@ -376,14 +390,34 @@ void ImuProcess::lic_point_cloud_undistort( const MeasureGroup &meas, const Stat
         IMU_pose.push_back( set_pose6d( offs_t, acc_imu, angvel_avr, vel_imu, pos_imu, R_imu ) );
     }
 
+    // PCL的最后一个点的时间和IMU的最后一个时间往往不是精准对齐的，这里根据最后一个IMU的姿态，计算了最后一个点云的姿态，这个是我们其他所有时刻的点云要对齐的坐标系
     /*** calculated the pos and attitude prediction at the frame-end ***/
     dt = pcl_end_time - imu_end_time;
     state_inout.vel_end = vel_imu + acc_imu * dt;
     state_inout.rot_end = R_imu * Exp( angvel_avr, dt );
     state_inout.pos_end = pos_imu + vel_imu * dt + 0.5 * acc_imu * dt * dt;
 
+    /*
+    点云补偿
+    基本过程：把点云的POSE倒序处理，每两个为一对，在队列前面叫head，下一个叫tail，对于点云数据，也是倒序处理，找大于head时间戳的点来处理，点云处理的位置用一个变量来维护。
+    详细过程：首先将PCL的指针it_pcl指向最后一个点云的位置，取出imu pose中最后面的两个pose，时间小的叫head，时间大的叫tail，
+    以it_pcl为起点，倒序处理每个点，对于某个点，假设对应的时刻为i，判断i是否大于head的时间，如果大于，则以这个head对应的姿态为起点、pcl点与head的时间差为dt，计算head到i时刻的姿态。
+    然后对比最后一个点云（结束时刻）的姿态，计算出i时刻的这个点，在结束时刻的lidar坐标系下的坐标。
+    P_at_lidar_i=Pi; // i时刻lidar坐标系下的点
+    P_at_imu_i=TblP_at_lidar_i; // i时刻lidar点在imu坐标系的坐标
+    P_at_world_i=Twi * P_at_imu_i; // 转换到world坐标系
+    P_at_imu_e=Twe.inverse()*P_at_world_i; // 转换到结束帧时刻的imu坐标
+    P_at_lidar_e=Tbl.inverse()*P_at_imu_e; // 有imu再转到lidar坐标
+    */
+
     Eigen::Vector3d pos_liD_e = state_inout.pos_end + state_inout.rot_end * Lidar_offset_to_IMU;
     // auto R_liD_e   = state_inout.rot_end * Lidar_R_to_IMU;
+    
+    // pos_liD_e的计算假设是imu与lidar的坐标系之间没有旋转变换，只有平移量，这个是livox集成了bmi088，它们的坐标系都是前左上，只有平移
+    // 如果是用自己的装配，需要根据条件调整，本质上就是Pw=Tib*Tbl*Pl
+    // Pl是雷达坐标系的原点，在雷达坐标系就是(0,0,0)
+    // Tib表示imu body坐标系到全局坐标系的转换，这里就是计算出来的rot_end,pos_end
+    // Tbl表示lidar坐标系到imu body坐标系的转换，这里旋转为单位阵，平移就是Lidar_offset_to_IMU，即lidar原点在imu坐标系下的表示
 
 #ifdef DEBUG_PRINT
     std::cout << "[ IMU Process ]: vel " << state_inout.vel_end.transpose() << " pos " << state_inout.pos_end.transpose() << " ba"
@@ -414,6 +448,18 @@ void ImuProcess::lic_point_cloud_undistort( const MeasureGroup &meas, const Stat
             Eigen::Matrix3d R_i( R_imu * Exp( angvel_avr, dt ) );
             Eigen::Vector3d T_ei( pos_imu + vel_imu * dt + 0.5 * acc_imu * dt * dt + R_i * Lidar_offset_to_IMU - pos_liD_e );
 
+            // T_ei表示i时刻的lidar坐标原点到end时刻的坐标平移量，用的全局坐标系的衡量
+            // T_ei=Ti-Te
+            // 为什么是Ti-Te，在global坐标系下原点为o，Ti是向量oi,Te是向量oe,
+            // Ti-Te就是向量oi-oe，得到的是向量ei,
+            // 即以e指向i的向量，以e为原点的向量
+            // end时刻已经计算出来了就是pos_liD_e
+            // i时刻的坐标计算方式与pos_liD_e一样
+            // pos_liD_i=Pos_i+rot_i*Lidar_offset_to_IMU
+            // 而Pos_i=Pos_head+velocity_head*dt+0.5*acc_head*dt*dt
+
+            // 本质上是将P_i转换到全局坐标系，再转换到end的坐标系下
+
             Eigen::Vector3d P_i( it_pcl->x, it_pcl->y, it_pcl->z );
             Eigen::Vector3d P_compensate = state_inout.rot_end.transpose() * ( R_i * P_i + T_ei );
 
@@ -433,14 +479,16 @@ void ImuProcess::Process( const MeasureGroup &meas, StatesGroup &stat, PointClou
     // double t1, t2, t3;
     // t1 = omp_get_wtime();
 
+    // 没imu数据的话直接return
     if ( meas.imu.empty() )
     {
-        // std::cout << "no imu data" << std::endl;
+        std::cout << "no imu data" << std::endl;
         return;
     };
     ROS_ASSERT( meas.lidar != nullptr );
 
-    if ( imu_need_init_ )
+    // IMU测量初始化
+    if (imu_need_init_)
     {
         /// The very first lidar frame
         IMU_Initial( meas, stat, init_iter_num );
@@ -466,15 +514,15 @@ void ImuProcess::Process( const MeasureGroup &meas, StatesGroup &stat, PointClou
     /// Compensate lidar points with IMU rotation (with only rotation now)
     // if ( 0 || (stat.last_update_time < 0.1))
 
-    if ( 0 )
+    if(0)
     {
         // UndistortPcl(meas, stat, *cur_pcl_un_);
     }
     else
     {
-        if ( 1 )
+        if(1)
         {
-            lic_point_cloud_undistort( meas, stat, *cur_pcl_un_ );
+            lic_point_cloud_undistort( meas, stat, *cur_pcl_un_ );          
         }
         else
         {

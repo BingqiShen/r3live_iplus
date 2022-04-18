@@ -46,12 +46,16 @@ Dr. Fu Zhang < fuzhang@hku.hk >.
  POSSIBILITY OF SUCH DAMAGE.
 */
 #include "r3live.hpp"
+#include <iostream>
+#include <fstream>
 
+// imu回调函数：把imu_msg装入imu_buffer_lio和imu_buffer_vio中
 void R3LIVE::imu_cbk( const sensor_msgs::Imu::ConstPtr &msg_in )
 {
-    sensor_msgs::Imu::Ptr msg( new sensor_msgs::Imu( *msg_in ) );
-    double                timestamp = msg->header.stamp.toSec();
-    g_camera_lidar_queue.imu_in( timestamp );
+    sensor_msgs::Imu::Ptr msg(new sensor_msgs::Imu(*msg_in));
+    // imu时间戳
+    double timestamp = msg->header.stamp.toSec();
+    g_camera_lidar_queue.imu_in(timestamp);
     mtx_buffer.lock();
     if ( timestamp < last_timestamp_imu )
     {
@@ -70,8 +74,8 @@ void R3LIVE::imu_cbk( const sensor_msgs::Imu::ConstPtr &msg_in )
         msg->linear_acceleration.z *= G_m_s2;
     }
 
-    imu_buffer_lio.push_back( msg );
-    imu_buffer_vio.push_back( msg );
+    imu_buffer_lio.push_back(msg); // LIO记录IMU
+    imu_buffer_vio.push_back(msg); // VIO记录IMU
     // std::cout<<"got imu: "<<timestamp<<" imu size "<<imu_buffer_lio.size()<<std::endl;
     mtx_buffer.unlock();
     sig_buffer.notify_all();
@@ -90,7 +94,6 @@ void printf_field_name( sensor_msgs::PointCloud2::ConstPtr &msg )
 
 bool R3LIVE::get_pointcloud_data_from_ros_message( sensor_msgs::PointCloud2::ConstPtr &msg, pcl::PointCloud< pcl::PointXYZINormal > &pcl_pc )
 {
-
     // printf("Frame [%d] %.3f ", g_LiDAR_frame_index,  msg->header.stamp.toSec() - g_camera_lidar_queue.m_first_imu_time);
     pcl::PointCloud< pcl::PointXYZI > res_pc;
     scope_color( ANSI_COLOR_YELLOW_BOLD );
@@ -104,12 +107,14 @@ bool R3LIVE::get_pointcloud_data_from_ros_message( sensor_msgs::PointCloud2::Con
     }
     else
     {
-        if ( ( msg->fields.size() == 8 ) && ( msg->fields[ 3 ].name == "intensity" ) &&
-             ( msg->fields[ 4 ].name == "normal_x" ) ) // Input message type is pcl::PointXYZINormal
+        // livox
+        if ( ( msg->fields.size() == 8 ) && ( msg->fields[3].name == "intensity" ) &&
+             ( msg->fields[4].name == "normal_x" ) ) // Input message type is pcl::PointXYZINormal
         {
             pcl::fromROSMsg( *msg, pcl_pc );
             return true;
         }
+
         else if ( ( msg->fields.size() == 4 ) && ( msg->fields[ 3 ].name == "rgb" ) )
         {
             double maximum_range = 5;
@@ -138,8 +143,38 @@ bool R3LIVE::get_pointcloud_data_from_ros_message( sensor_msgs::PointCloud2::Con
             pcl_pc.points.resize( pt_count );
             return true;
         }
+        // // Ouster
+        // else if ( ( msg->fields.size() == 9 ) && ( msg->fields[4].name == "t" ) )
+        // {
+        //     double maximum_range = 5;
+        //     get_ros_parameter< double >( m_ros_node_handle, "iros_range", maximum_range, 5 );
+        //     pcl::PointCloud< pcl::PointXYZRGB > pcl_rgb_pc;
+        //     pcl::fromROSMsg( *msg, pcl_rgb_pc );
+        //     double lidar_point_time = msg->header.stamp.toSec();
+        //     int    pt_count = 0;
+        //     pcl_pc.resize( pcl_rgb_pc.points.size() );
+        //     for ( int i = 0; i < pcl_rgb_pc.size(); i++ )
+        //     {
+        //         pcl::PointXYZINormal temp_pt;
+        //         temp_pt.x = pcl_rgb_pc.points[ i ].x;
+        //         temp_pt.y = pcl_rgb_pc.points[ i ].y;
+        //         temp_pt.z = pcl_rgb_pc.points[ i ].z;
+        //         double frame_dis = sqrt( temp_pt.x * temp_pt.x + temp_pt.y * temp_pt.y + temp_pt.z * temp_pt.z );
+        //         if ( frame_dis > maximum_range )
+        //         {
+        //             continue;
+        //         }
+        //         temp_pt.intensity = ( pcl_rgb_pc.points[ i ].r + pcl_rgb_pc.points[ i ].g + pcl_rgb_pc.points[ i ].b ) / 3.0;
+        //         temp_pt.curvature = 0;
+        //         pcl_pc.points[ pt_count ] = temp_pt;
+        //         pt_count++;
+        //     }
+        //     pcl_pc.points.resize( pt_count );
+        //     return true;
+        // }
         else // TODO, can add by yourself
         {
+            cout << "1111111" << endl;
             cout << "Get pointcloud data from ros messages fail!!! ";
             scope_color( ANSI_COLOR_RED_BOLD );
             printf_field_name( msg );
@@ -176,7 +211,7 @@ bool R3LIVE::sync_packages( MeasureGroup &meas )
     {
         return false;
     }
-
+    
     /*** push imu data, and pop from imu buffer ***/
     double imu_time = imu_buffer_lio.front()->header.stamp.toSec();
     meas.imu.clear();
@@ -184,7 +219,9 @@ bool R3LIVE::sync_packages( MeasureGroup &meas )
     {
         imu_time = imu_buffer_lio.front()->header.stamp.toSec();
         if ( imu_time > lidar_end_time + 0.02 )
+        {
             break;
+        }
         meas.imu.push_back( imu_buffer_lio.front() );
         imu_buffer_lio.pop_front();
     }
@@ -199,8 +236,15 @@ bool R3LIVE::sync_packages( MeasureGroup &meas )
 // project lidar frame to world
 void R3LIVE::pointBodyToWorld( PointType const *const pi, PointType *const po )
 {
+    Eigen::Matrix3d R_Lidar_offset_to_IMU;
+    // R_Lidar_offset_to_IMU << -0.9741, 0.2262, 0.0008, -0.2261, -0.9740, 0.0147, 0.0041, 0.0141, 0.9999; // hesai
+    R_Lidar_offset_to_IMU << 1, 0, 0, 0, 1, 0, 0, 0, 1; // ouster
+
     Eigen::Vector3d p_body( pi->x, pi->y, pi->z );
-    Eigen::Vector3d p_global( g_lio_state.rot_end * ( p_body + Lidar_offset_to_IMU ) + g_lio_state.pos_end );
+    Eigen::Vector3d p_global( g_lio_state.rot_end * R_Lidar_offset_to_IMU * p_body + 
+                              g_lio_state.rot_end * Lidar_offset_to_IMU + 
+                              g_lio_state.pos_end );
+    // Eigen::Vector3d p_global( g_lio_state.rot_end * ( p_body + Lidar_offset_to_IMU ) + g_lio_state.pos_end );
 
     po->x = p_global( 0 );
     po->y = p_global( 1 );
@@ -210,8 +254,15 @@ void R3LIVE::pointBodyToWorld( PointType const *const pi, PointType *const po )
 
 void R3LIVE::RGBpointBodyToWorld( PointType const *const pi, pcl::PointXYZI *const po )
 {
+    Eigen::Matrix3d R_Lidar_offset_to_IMU;
+    // R_Lidar_offset_to_IMU << -0.9741, 0.2262, 0.0008, -0.2261, -0.9740, 0.0147, 0.0041, 0.0141, 0.9999; // hesai
+    R_Lidar_offset_to_IMU << 1, 0, 0, 0, 1, 0, 0, 0, 1; // ouster
+
     Eigen::Vector3d p_body( pi->x, pi->y, pi->z );
-    Eigen::Vector3d p_global( g_lio_state.rot_end * ( p_body + Lidar_offset_to_IMU ) + g_lio_state.pos_end );
+    Eigen::Vector3d p_global( g_lio_state.rot_end * R_Lidar_offset_to_IMU * p_body + 
+                              g_lio_state.rot_end * Lidar_offset_to_IMU + 
+                              g_lio_state.pos_end );
+    // Eigen::Vector3d p_global( g_lio_state.rot_end * ( p_body + Lidar_offset_to_IMU ) + g_lio_state.pos_end );
 
     po->x = p_global( 0 );
     po->y = p_global( 1 );
@@ -459,11 +510,13 @@ void R3LIVE::lasermap_fov_segment()
     // s_plot6.push_back(omp_get_wtime() - t_begin);
 }
 
-void R3LIVE::feat_points_cbk( const sensor_msgs::PointCloud2::ConstPtr &msg_in )
+// 激光特征回调函数：把激光msg装入lidar_buffer中
+void R3LIVE::feat_points_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg_in)
 {
-    sensor_msgs::PointCloud2::Ptr msg( new sensor_msgs::PointCloud2( *msg_in ) );
-    msg->header.stamp = ros::Time( msg_in->header.stamp.toSec() - m_lidar_imu_time_delay );
-    if ( g_camera_lidar_queue.lidar_in( msg_in->header.stamp.toSec() + 0.1 ) == 0 )
+    sensor_msgs::PointCloud2::Ptr msg(new sensor_msgs::PointCloud2(*msg_in));
+    msg->header.stamp = ros::Time( msg_in->header.stamp.toSec() - m_lidar_imu_time_delay ); // lidar - 延迟
+    // 返回激光进去的时间
+    if (g_camera_lidar_queue.lidar_in(msg_in->header.stamp.toSec() + 0.1) == 0)
     {
         return;
     }
@@ -475,7 +528,7 @@ void R3LIVE::feat_points_cbk( const sensor_msgs::PointCloud2::ConstPtr &msg_in )
         lidar_buffer.clear();
     }
     // ROS_INFO("get point cloud at time: %.6f", msg->header.stamp.toSec());
-    lidar_buffer.push_back( msg );
+    lidar_buffer.push_back(msg);
     last_timestamp_lidar = msg->header.stamp.toSec();
     mtx_buffer.unlock();
     sig_buffer.notify_all();
@@ -496,8 +549,10 @@ int R3LIVE::service_LIO_update()
     path.header.stamp = ros::Time::now();
     path.header.frame_id = "/world";
     /*** variables definition ***/
+    // 根据R3LIVE论文公式（1），激光+视觉观测共29维状态量，激光观测则为18维状态量
     Eigen::Matrix< double, DIM_OF_STATES, DIM_OF_STATES > G, H_T_H, I_STATE;
-    G.setZero();
+    // FAST-LIO论文公式（19）
+    G.setZero();          // K * H
     H_T_H.setZero();
     I_STATE.setIdentity();
 
@@ -507,9 +562,9 @@ int R3LIVE::service_LIO_update()
     cv::Mat matP( 6, 6, CV_32F, cv::Scalar::all( 0 ) );
 
     PointCloudXYZINormal::Ptr feats_undistort( new PointCloudXYZINormal() );
-    PointCloudXYZINormal::Ptr feats_down( new PointCloudXYZINormal() );
-    PointCloudXYZINormal::Ptr laserCloudOri( new PointCloudXYZINormal() );
-    PointCloudXYZINormal::Ptr coeffSel( new PointCloudXYZINormal() );
+    PointCloudXYZINormal::Ptr feats_down( new PointCloudXYZINormal() );     // voxel降采样后的特征点
+    PointCloudXYZINormal::Ptr laserCloudOri( new PointCloudXYZINormal() );  // 记录实际用于point_to_plane ICP的点
+    PointCloudXYZINormal::Ptr coeffSel( new PointCloudXYZINormal() );       // 记录实际用于point_to_plane 的平面参数
 
     /*** variables initialize ***/
     FOV_DEG = fov_deg + 10;
@@ -533,6 +588,7 @@ int R3LIVE::service_LIO_update()
             break;
         ros::spinOnce();
         std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
+        // lidar数据时间必须小于camera数据时间
         while ( g_camera_lidar_queue.if_lidar_can_process() == false )
         {
             ros::spinOnce();
@@ -540,15 +596,20 @@ int R3LIVE::service_LIO_update()
             std::this_thread::sleep_for( std::chrono::milliseconds( THREAD_SLEEP_TIM ) );
         }
         std::unique_lock< std::mutex > lock( m_mutex_lio_process );
-        if ( 1 )
+        
+        if(1)
         {
             // printf_line;
             Common_tools::Timer tim;
-            if ( sync_packages( Measures ) == 0 )
+
+            // 按照lidar起止时间，筛选区间内IMU数据
+            if ( sync_packages(Measures) == 0 )
             {
                 continue;
             }
+
             int lidar_can_update = 1;
+            // 第一个点的时间
             g_lidar_star_tim = frame_first_pt_time;
             if ( flg_reset )
             {
@@ -566,11 +627,13 @@ int R3LIVE::service_LIO_update()
             pca_time = 0;
             svd_time = 0;
             t0 = omp_get_wtime();
+            // IMU向前传播和点云畸变矫正，p_imu是IMUProcess类型指针，Measures里放着imu数据和激光数据
             p_imu->Process( Measures, g_lio_state, feats_undistort );
 
             g_camera_lidar_queue.g_noise_cov_acc = p_imu->cov_acc;
             g_camera_lidar_queue.g_noise_cov_gyro = p_imu->cov_gyr;
-            StatesGroup state_propagate( g_lio_state );
+            StatesGroup state_propagate(g_lio_state);
+
 
             // cout << "G_lio_state.last_update_time =  " << std::setprecision(10) << g_lio_state.last_update_time -g_lidar_star_tim  << endl;
             if ( feats_undistort->empty() || ( feats_undistort == NULL ) )
@@ -599,8 +662,8 @@ int R3LIVE::service_LIO_update()
                       << std::endl;
 #endif
             lasermap_fov_segment();
-            downSizeFilterSurf.setInputCloud( feats_undistort );
-            downSizeFilterSurf.filter( *feats_down );
+            downSizeFilterSurf.setInputCloud(feats_undistort);
+            downSizeFilterSurf.filter(*feats_down);
             // cout <<"Preprocess cost time: " << tim.toc("Preprocess") << endl;
             /*** initialize the map kdtree ***/
             if ( ( feats_down->points.size() > 1 ) && ( ikdtree.Root_Node == nullptr ) )
@@ -646,9 +709,9 @@ int R3LIVE::service_LIO_update()
                     pubLaserCloudMap.publish( laserCloudMap );
                 }
 
-                std::vector< bool >               point_selected_surf( feats_down_size, true );
-                std::vector< std::vector< int > > pointSearchInd_surf( feats_down_size );
-                std::vector< PointVector >        Nearest_Points( feats_down_size );
+                std::vector<bool>               point_selected_surf(feats_down_size, true);
+                std::vector<std::vector<int>>   pointSearchInd_surf(feats_down_size);
+                std::vector<PointVector>        Nearest_Points(feats_down_size);
 
                 int  rematch_num = 0;
                 bool rematch_en = 0;
@@ -679,7 +742,7 @@ int R3LIVE::service_LIO_update()
                         pointBodyToWorld( &pointOri_tmpt, &pointSel_tmpt );
                         std::vector< float > pointSearchSqDis_surf;
 
-                        auto &points_near = Nearest_Points[ i ];
+                        auto &points_near = Nearest_Points[i];
 
                         if ( iterCount == 0 || rematch_en )
                         {
@@ -701,36 +764,39 @@ int R3LIVE::service_LIO_update()
 
                         // match_time += omp_get_wtime() - match_start;
                         double pca_start = omp_get_wtime();
-                        /// PCA (using minimum square method)
-                        cv::Mat matA0( NUM_MATCH_POINTS, 3, CV_32F, cv::Scalar::all( 0 ) );
-                        cv::Mat matB0( NUM_MATCH_POINTS, 1, CV_32F, cv::Scalar::all( -1 ) );
-                        cv::Mat matX0( NUM_MATCH_POINTS, 1, CV_32F, cv::Scalar::all( 0 ) );
 
+                        /************************ 以下都是LOAM的东西 ******************************/
+                        
+                        cv::Mat matA0( NUM_MATCH_POINTS, 3, CV_32F, cv::Scalar::all(0) );
+                        cv::Mat matB0( NUM_MATCH_POINTS, 1, CV_32F, cv::Scalar::all(-1) );
+                        cv::Mat matX0( NUM_MATCH_POINTS, 1, CV_32F, cv::Scalar::all(0) );
+
+                        // 5个最近邻点的坐标赋给A0
                         for ( int j = 0; j < NUM_MATCH_POINTS; j++ )
                         {
-                            matA0.at< float >( j, 0 ) = points_near[ j ].x;
-                            matA0.at< float >( j, 1 ) = points_near[ j ].y;
-                            matA0.at< float >( j, 2 ) = points_near[ j ].z;
+                            matA0.at<float>(j, 0) = points_near[j].x;
+                            matA0.at<float>(j, 1) = points_near[j].y;
+                            matA0.at<float>(j, 2) = points_near[j].z;
                         }
-
+                        // 假设5个近邻点构成的平面方程为ax+by+cz+1=0，这里就是求a b c，d=1
                         cv::solve( matA0, matB0, matX0, cv::DECOMP_QR ); // TODO
-
+                        
+                        // 平面方程的系数，也是法向量的分量
                         float pa = matX0.at< float >( 0, 0 );
                         float pb = matX0.at< float >( 1, 0 );
                         float pc = matX0.at< float >( 2, 0 );
                         float pd = 1;
 
+                        // 平面单位法向量，ps是原向量（pa,pb,pc）的模长
                         float ps = sqrt( pa * pa + pb * pb + pc * pc );
-                        pa /= ps;
-                        pb /= ps;
-                        pc /= ps;
-                        pd /= ps;
+                        pa /= ps; pb /= ps; pc /= ps; pd /= ps;
 
+                        // 检查平面是否合格，如果5个点到平面的距离超过0.05m，那么认为这些点太分散了，不构成平面
                         bool planeValid = true;
                         for ( int j = 0; j < NUM_MATCH_POINTS; j++ )
                         {
                             // ANCHOR -  Planar check
-                            if ( fabs( pa * points_near[ j ].x + pb * points_near[ j ].y + pc * points_near[ j ].z + pd ) >
+                            if ( fabs( pa * points_near[j].x + pb * points_near[j].y + pc * points_near[j].z + pd ) >
                                  m_planar_check_dis ) // Raw 0.05
                             {
                                 // ANCHOR - Far distance pt processing
@@ -744,9 +810,12 @@ int R3LIVE::service_LIO_update()
                             }
                         }
 
-                        if ( planeValid )
+                        // 若平面合格
+                        if (planeValid)
                         {
+                            // 根据点到平面的距离公式，pd2是点到平面的距离，（pa,pb,pc）为平面的法向量
                             float pd2 = pa * pointSel_tmpt.x + pb * pointSel_tmpt.y + pc * pointSel_tmpt.z + pd;
+                            // 计算权重s，但这个权重之后好像没用到啊
                             float s = 1 - 0.9 * fabs( pd2 ) /
                                               sqrt( sqrt( pointSel_tmpt.x * pointSel_tmpt.x + pointSel_tmpt.y * pointSel_tmpt.y +
                                                           pointSel_tmpt.z * pointSel_tmpt.z ) );
@@ -760,16 +829,17 @@ int R3LIVE::service_LIO_update()
                                 //     res_last[i] = 0.0;
                                 //     continue;
                                 // }
-                                point_selected_surf[ i ] = true;
-                                coeffSel_tmpt->points[ i ].x = pa;
-                                coeffSel_tmpt->points[ i ].y = pb;
-                                coeffSel_tmpt->points[ i ].z = pc;
-                                coeffSel_tmpt->points[ i ].intensity = pd2;
-                                res_last[ i ] = std::abs( pd2 );
+                                point_selected_surf[i] = true;
+                                coeffSel_tmpt->points[i].x = pa;
+                                coeffSel_tmpt->points[i].y = pb;
+                                coeffSel_tmpt->points[i].z = pc;
+                                coeffSel_tmpt->points[i].intensity = pd2;
+                                // FAST-LIO论文公式（12）
+                                res_last[i] = std::abs(pd2);
                             }
                             else
                             {
-                                point_selected_surf[ i ] = false;
+                                point_selected_surf[i] = false;
                             }
                         }
                         pca_time += omp_get_wtime() - pca_start;
@@ -793,29 +863,33 @@ int R3LIVE::service_LIO_update()
                     match_time += omp_get_wtime() - match_start;
                     solve_start = omp_get_wtime();
 
-                    /*** Computation of Measuremnt Jacobian matrix H and measurents vector ***/
+                    /************* Computation of Measuremnt Jacobian matrix H and measurents vector ************/
                     Eigen::MatrixXd Hsub( laserCloudSelNum, 6 );
                     Eigen::VectorXd meas_vec( laserCloudSelNum );
                     Hsub.setZero();
+                    
+                    Eigen::Matrix3d R_Lidar_offset_to_IMU;
+                    // R_Lidar_offset_to_IMU << -0.9741, 0.2262, 0.0008, -0.2261, -0.9740, 0.0147, 0.0041, 0.0141, 0.9999; // hesai
+                    R_Lidar_offset_to_IMU << 1, 0, 0, 0, 1, 0, 0, 0, 1; // ouster
 
                     for ( int i = 0; i < laserCloudSelNum; i++ )
                     {
-                        const PointType &laser_p = laserCloudOri->points[ i ];
+                        const PointType &laser_p = laserCloudOri->points[i];
                         Eigen::Vector3d  point_this( laser_p.x, laser_p.y, laser_p.z );
-                        point_this += Lidar_offset_to_IMU;
+                        point_this = R_Lidar_offset_to_IMU * point_this + Lidar_offset_to_IMU;
                         Eigen::Matrix3d point_crossmat;
                         point_crossmat << SKEW_SYM_MATRIX( point_this );
 
                         /*** get the normal vector of closest surface/corner ***/
-                        const PointType &norm_p = coeffSel->points[ i ];
+                        const PointType &norm_p = coeffSel->points[i];
                         Eigen::Vector3d  norm_vec( norm_p.x, norm_p.y, norm_p.z );
 
                         /*** calculate the Measuremnt Jacobian matrix H ***/
                         Eigen::Vector3d A( point_crossmat * g_lio_state.rot_end.transpose() * norm_vec );
-                        Hsub.row( i ) << VEC_FROM_ARRAY( A ), norm_p.x, norm_p.y, norm_p.z;
+                        Hsub.row(i) << VEC_FROM_ARRAY(A), norm_p.x, norm_p.y, norm_p.z;
 
                         /*** Measuremnt: distance to the closest surface/corner ***/
-                        meas_vec( i ) = -norm_p.intensity;
+                        meas_vec(i) = -norm_p.intensity;
                     }
 
                     Eigen::Vector3d                           rot_add, t_add, v_add, bg_add, ba_add, g_add;
@@ -823,21 +897,26 @@ int R3LIVE::service_LIO_update()
                     Eigen::MatrixXd                           K( DIM_OF_STATES, laserCloudSelNum );
 
                     /*** Iterative Kalman Filter Update ***/
+                    // dim_measure < dim_state
                     if ( !flg_EKF_inited )
                     {
                         cout << ANSI_COLOR_RED_BOLD << "Run EKF init" << ANSI_COLOR_RESET << endl;
                         /*** only run in initialization period ***/
                         set_initial_state_cov( g_lio_state );
                     }
+                    
+                    // dim_measure > dim_state
                     else
                     {
                         // cout << ANSI_COLOR_RED_BOLD << "Run EKF uph" << ANSI_COLOR_RESET << endl;
+                        // FAST-LIO论文公式（20）
                         auto &&Hsub_T = Hsub.transpose();
                         H_T_H.block< 6, 6 >( 0, 0 ) = Hsub_T * Hsub;
                         Eigen::Matrix< double, DIM_OF_STATES, DIM_OF_STATES > &&K_1 =
                             ( H_T_H + ( g_lio_state.cov / LASER_POINT_COV ).inverse() ).inverse();
                         K = K_1.block< DIM_OF_STATES, 6 >( 0, 0 ) * Hsub_T;
 
+                        // update state
                         auto vec = state_propagate - g_lio_state;
                         solution = K * ( meas_vec - Hsub * vec.block< 6, 1 >( 0, 0 ) );
                         // double speed_delta = solution.block( 0, 6, 3, 1 ).norm();
@@ -848,7 +927,7 @@ int R3LIVE::service_LIO_update()
 
                         g_lio_state = state_propagate + solution;
                         print_dash_board();
-                        // cout << ANSI_COLOR_RED_BOLD << "Run EKF uph, vec = " << vec.head<9>().transpose() << ANSI_COLOR_RESET << endl;
+
                         rot_add = solution.block< 3, 1 >( 0, 0 );
                         t_add = solution.block< 3, 1 >( 3, 0 );
                         flg_EKF_converged = false;
@@ -881,6 +960,7 @@ int R3LIVE::service_LIO_update()
                         if ( flg_EKF_inited )
                         {
                             /*** Covariance Update ***/
+                            // FAST-LIO论文公式（19）
                             G.block< DIM_OF_STATES, 6 >( 0, 0 ) = K * Hsub;
                             g_lio_state.cov = ( I_STATE - G ) * g_lio_state.cov;
                             total_distance += ( g_lio_state.pos_end - position_last ).norm();
@@ -953,7 +1033,7 @@ int R3LIVE::service_LIO_update()
             {
                 for ( int i = 0; i < laserCloudFullResNum; i++ )
                 {
-                    RGBpointBodyToWorld( &laserCloudFullRes2->points[ i ], &temp_point );
+                    RGBpointBodyToWorld( &laserCloudFullRes2->points[i], &temp_point );
                     laserCloudFullResColor->push_back( temp_point );
                 }
                 sensor_msgs::PointCloud2 laserCloudFullRes3;
@@ -1044,13 +1124,30 @@ int R3LIVE::service_LIO_update()
 
             msg_body_pose.header.stamp = ros::Time::now();
             msg_body_pose.header.frame_id = "/camera_odom_frame";
-            msg_body_pose.pose.position.x = g_lio_state.pos_end( 0 );
-            msg_body_pose.pose.position.y = g_lio_state.pos_end( 1 );
-            msg_body_pose.pose.position.z = g_lio_state.pos_end( 2 );
+            msg_body_pose.pose.position.x = g_lio_state.pos_end(0);
+            msg_body_pose.pose.position.y = g_lio_state.pos_end(1);
+            msg_body_pose.pose.position.z = g_lio_state.pos_end(2);
             msg_body_pose.pose.orientation.x = geoQuat.x;
             msg_body_pose.pose.orientation.y = geoQuat.y;
             msg_body_pose.pose.orientation.z = geoQuat.z;
             msg_body_pose.pose.orientation.w = geoQuat.w;
+
+            // debug by sbq
+            ofstream outfile;
+            if(outfile.bad())
+            {
+                cout << "Unable to open otfile";
+                exit(1); 
+            }
+            outfile.open(string(getenv("HOME")) + "/jz_ws/r3live_ws/result/r3live_location.txt", ios::app);
+            outfile << std::fixed << ros::Time().fromSec(last_timestamp_lidar) << " " << msg_body_pose.pose.position.x
+                                                                << " " << msg_body_pose.pose.position.y
+                                                                << " " << msg_body_pose.pose.position.z
+                                                                << " " << msg_body_pose.pose.orientation.x
+                                                                << " " << msg_body_pose.pose.orientation.y
+                                                                << " " << msg_body_pose.pose.orientation.z
+                                                                << " " << msg_body_pose.pose.orientation.w << endl;
+            outfile.close();
 
             /******* Publish Path ********/
             msg_body_pose.header.frame_id = "world";

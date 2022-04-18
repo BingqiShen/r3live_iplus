@@ -2,20 +2,20 @@
     <!-- Subscribed topics -->
     <param name="/LiDAR_pointcloud_topic" type="string" value= "/os_cloud_node/points" />
     <param name="/IMU_topic" type="string" value= "/os_cloud_node/imu" />
-    <param name="/Image_topic" type="string" value= "/alphasense_driver_ros/cam0" />
+    <param name="/Image_topic" type="string" value= "/camera/color/image_raw" />
     <param name="map_output_dir" type="string" value="/media/jz/5b3f1040-e4bd-4eee-8340-b1e1fbc574ba/home/jz/Lidar_Camera/r3live_bag/r3live_output" />
-    <rosparam command="load" file="$(find r3live)/../config/r3live_config_oxford.yaml" />
+    <rosparam command="load" file="$(find r3live)/../config/r3live_config_oxford_zju.yaml" />
     
     <!-- set LiDAR type as ouster-64 spining LiDAR -->
     <param name="/Lidar_front_end/lidar_type" type="int" value= "3" /> 
     <param name="/Lidar_front_end/point_step" type="int" value="1" />
-    <param name="r3live_lio/lio_update_point_step" type="int" value="6" />
+    <param name="r3live_lio/lio_update_point_step" type="int" value="4" />
         
     <node pkg="r3live" type="r3live_LiDAR_front_end" name="r3live_LiDAR_front_end"  output="screen" required="true"/>
     <node pkg="r3live" type="r3live_mapping" name="r3live_mapping" output="screen" required="true" />
     
-    <!-- Image conversion -->
-    <node pkg="image_transport" type="republish" name="r3live_republish" args="compressed in:=/alphasense_driver_ros/cam0 raw out:=/alphasense_driver_ros/cam0" output="screen" respawn="true"/>
+    <!-- Image conversion
+    <node pkg="image_transport" type="republish" name="r3live_republish" args="compressed in:=/alphasense_driver_ros/cam0 raw out:=/alphasense_driver_ros/cam0" output="screen" respawn="true"/> -->
     
     <arg name="rviz" default="1" />
     <group if="$(arg rviz)">

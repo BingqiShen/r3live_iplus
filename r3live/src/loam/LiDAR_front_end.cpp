@@ -12,45 +12,51 @@ typedef pcl::PointXYZINormal PointType;
 
 ros::Publisher pub_full, pub_surf, pub_corn;
 
+// lidar类型
 enum LID_TYPE
 {
     MID,
     HORIZON,
     VELO16,
-    OUST64
+    OUST64,
+    HESAI
 };
 
+// 特征类型
 enum Feature
 {
     Nor,
-    Poss_Plane,
-    Real_Plane,
-    Edge_Jump,
-    Edge_Plane,
-    Wire,
-    ZeroPoint
+    Poss_Plane,  // 可能平面
+    Real_Plane,  // 平面
+    Edge_Jump,   // 跳跃边
+    Edge_Plane,  // 平面交接边
+    Wire,        // 细线
+    ZeroPoint    // 接近0度（边）
 };
+
 enum Surround
 {
     Prev,
     Next
 };
+
 enum E_jump
 {
     Nr_nor,
-    Nr_zero,
-    Nr_180,
-    Nr_inf,
-    Nr_blind
+    Nr_zero,  // 接近0度
+    Nr_180,   // 接近180度
+    Nr_inf,   // 接近远端
+    Nr_blind  // 接近近端
 };
 
+// 用于记录每个点的距离、角度、特征种类等属性
 struct orgtype
 {
-    double  range;
-    double  dista;
-    double  angle[ 2 ];
-    double  intersect;
-    E_jump  edj[ 2 ];
+    double  range;       // 平面距离
+    double  dista;       // 与后一个点的间距
+    double  angle[ 2 ];  // cos(当前点指向前一点或后一点的向量，ray)
+    double  intersect;   // 当前点与相邻两点的夹角cos值
+    E_jump  edj[ 2 ];    // 点前后两个方向的edge_jump类型
     Feature ftype;
     orgtype()
     {
@@ -82,6 +88,7 @@ void   mid_handler( const sensor_msgs::PointCloud2::ConstPtr &msg );
 void   horizon_handler( const livox_ros_driver::CustomMsg::ConstPtr &msg );
 void   velo16_handler( const sensor_msgs::PointCloud2::ConstPtr &msg );
 void   oust64_handler( const sensor_msgs::PointCloud2::ConstPtr &msg );
+void   hesai_handler( const sensor_msgs::PointCloud2::ConstPtr &msg );
 void   give_feature( pcl::PointCloud< PointType > &pl, vector< orgtype > &types, pcl::PointCloud< PointType > &pl_corn,
                      pcl::PointCloud< PointType > &pl_surf );
 void   pub_func( pcl::PointCloud< PointType > &pl, ros::Publisher pub, const ros::Time &ct );
@@ -113,7 +120,7 @@ int main( int argc, char **argv )
     n.param< double >( "Lidar_front_end/smallp_intersect", smallp_intersect, 172.5 );
     n.param< double >( "Lidar_front_end/smallp_ratio", smallp_ratio, 1.2 );
     n.param< int >( "Lidar_front_end/point_filter_num", point_filter_num, 1 );
-    n.param< int >( "Lidar_front_end/point_step", g_LiDAR_sampling_point_step, 3 );
+    n.param< int >( "Lidar_front_end/point_step", g_LiDAR_sampling_point_step, 8 );
     n.param< int >( "Lidar_front_end/using_raw_point", g_if_using_raw_point, 1 );
 
     jump_up_limit = cos( jump_up_limit / 180 * M_PI );
@@ -123,6 +130,7 @@ int main( int argc, char **argv )
 
     ros::Subscriber sub_points;
 
+    // 根据激光类型订阅不同激光topic
     switch ( lidar_type )
     {
     case MID:
@@ -144,6 +152,11 @@ int main( int argc, char **argv )
         printf( "OUST64\n" );
         sub_points = n.subscribe( "/os_cloud_node/points", 1000, oust64_handler, ros::TransportHints().tcpNoDelay() );
         break;
+    
+    case HESAI:
+        printf( "HESAI\n" );
+        sub_points = n.subscribe( "/hesai/pandar", 1000, hesai_handler, ros::TransportHints().tcpNoDelay() );
+        break;
 
     default:
         printf( "Lidar type is wrong.\n" );
@@ -162,27 +175,30 @@ int main( int argc, char **argv )
 double vx, vy, vz;
 void   mid_handler( const sensor_msgs::PointCloud2::ConstPtr &msg )
 {
+    // 转化为pcl点云格式
     pcl::PointCloud< PointType > pl;
     pcl::fromROSMsg( *msg, pl );
 
     pcl::PointCloud< PointType > pl_corn, pl_surf;
-    vector< orgtype >            types;
-    uint                         plsize = pl.size() - 1;
+    vector<orgtype> types;
+    uint plsize = pl.size() - 1;
     pl_corn.reserve( plsize );
     pl_surf.reserve( plsize );
     types.resize( plsize + 1 );
 
     for ( uint i = 0; i < plsize; i++ )
     {
+        // 平面距离
         types[ i ].range = pl[ i ].x;
         vx = pl[ i ].x - pl[ i + 1 ].x;
         vy = pl[ i ].y - pl[ i + 1 ].y;
         vz = pl[ i ].z - pl[ i + 1 ].z;
+        // 第i个点与第i+1个点的距离
         types[ i ].dista = vx * vx + vy * vy + vz * vz;
     }
     // plsize++;
     types[ plsize ].range = sqrt( pl[ plsize ].x * pl[ plsize ].x + pl[ plsize ].y * pl[ plsize ].y );
-
+    // 提取角点和平面点
     give_feature( pl, types, pl_corn, pl_surf );
 
     ros::Time ct( ros::Time::now() );
@@ -372,6 +388,84 @@ void oust64_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
                 // printf("(%d, %.2f, %.2f)\r\n", pl_orig.points[i].ring, pl_orig.points[i].t, pl_orig.points[i].range);
                 // printf("(%d, %d, %d)\r\n", pl_orig.points[i].ring, 1, 2);
                 cout << ( int ) ( pl_orig.points[ i ].ring ) << ", " << ( pl_orig.points[ i ].t / 1e9 ) << ", " << pl_orig.points[ i ].range << endl;
+            }
+        }
+    }
+    pub_func( pl_processed, pub_full, msg->header.stamp );
+    pub_func( pl_processed, pub_surf, msg->header.stamp );
+    pub_func( pl_processed, pub_corn, msg->header.stamp );
+}
+
+namespace hesai_ros {
+
+struct EIGEN_ALIGN16 Point {
+    PCL_ADD_POINT4D;
+    float intensity;
+    uint32_t timestamp;
+    uint8_t ring;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+}
+
+// clang-format off
+POINT_CLOUD_REGISTER_POINT_STRUCT(hesai_ros::Point,
+    (float, x, x)
+    (float, y, y)
+    (float, z, z)
+    (float, intensity, intensity)
+    // use std::uint32_t to avoid conflicting with pcl::uint32_t
+    (std::uint32_t, timestamp, timestamp)
+    (std::uint8_t, ring, ring)
+)
+// clang-format on
+
+void hesai_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
+{
+    pcl::PointCloud< PointType > pl_processed;
+    pcl::PointCloud< hesai_ros::Point > pl_orig;
+    // pcl::PointCloud<pcl::PointXYZI> pl_orig;
+    pcl::fromROSMsg( *msg, pl_orig );
+    uint plsize = pl_orig.size();
+
+    double time_stamp = msg->header.stamp.toSec();
+    pl_processed.clear();
+    pl_processed.reserve( pl_orig.points.size() );
+    for ( int i = 0; i < pl_orig.points.size(); i++ )
+    {
+        double range = std::sqrt( pl_orig.points[i].x * pl_orig.points[i].x + pl_orig.points[i].y * pl_orig.points[i].y +
+                                  pl_orig.points[i].z * pl_orig.points[i].z );
+        if ( range < blind )
+        {
+            continue;
+        }
+        Eigen::Vector3d pt_vec;
+        PointType       added_pt;
+        added_pt.x = pl_orig.points[i].x;
+        added_pt.y = pl_orig.points[i].y;
+        added_pt.z = pl_orig.points[i].z;
+        added_pt.intensity = pl_orig.points[i].intensity;
+        added_pt.normal_x = 0;
+        added_pt.normal_y = 0;
+        added_pt.normal_z = 0;
+        double yaw_angle = std::atan2( added_pt.y, added_pt.x ) * 57.3;
+        if ( yaw_angle >= 180.0 )
+            yaw_angle -= 360.0;
+        if ( yaw_angle <= -180.0 )
+            yaw_angle += 360.0;
+
+        added_pt.curvature = ( pl_orig.points[i].timestamp / 1e9 ) * 1000.0;
+
+        pl_processed.points.push_back( added_pt );
+        if ( 0 ) // For debug
+        {
+            if ( pl_processed.size() % 1000 == 0 )
+            {
+                printf( "[%d] (%.2f, %.2f, %.2f), ( %.2f, %.2f, %.2f ) | %.2f | %.3f,  \r\n", i, pl_orig.points[ i ].x, pl_orig.points[ i ].y,
+                        pl_orig.points[ i ].z, pl_processed.points.back().normal_x, pl_processed.points.back().normal_y,
+                        pl_processed.points.back().normal_z, yaw_angle, pl_processed.points.back().intensity );
+                // printf("(%d, %.2f, %.2f)\r\n", pl_orig.points[i].ring, pl_orig.points[i].t, pl_orig.points[i].range);
+                // printf("(%d, %d, %d)\r\n", pl_orig.points[i].ring, 1, 2);
+                // cout << ( int ) ( pl_orig.points[ i ].ring ) << ", " << ( pl_orig.points[ i ].timestamp / 1e9 ) << ", " << pl_orig.points[ i ].range << endl;
             }
         }
     }

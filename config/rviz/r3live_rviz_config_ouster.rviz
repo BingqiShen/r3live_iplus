@@ -15,15 +15,15 @@ Panels:
         - /RGB_map1/PointCloud22
         - /RGB_map1/PointCloud23
         - /Input image1
-      Splitter Ratio: 0.4651159942150116
-    Tree Height: 886
+      Splitter Ratio: 0.465115994
+    Tree Height: 417
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Time
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: feature_map
+    SyncSource: ""
   - Class: rviz/Displays
     Help Height: 138
     Name: Displays
@@ -41,15 +41,13 @@ Panels:
         - /RGB_map1/PointCloud22
         - /RGB_map1/PointCloud260
       Splitter Ratio: 0.5
-    Tree Height: 303
+    Tree Height: 299
   - Class: rviz/Views
     Expanded:
       - /Current View1
       - /Orbit1
     Name: Views
     Splitter Ratio: 0.5
-Preferences:
-  PromptSaveOnExit: true
 Toolbars:
   toolButtonStyle: 2
 Visualization Manager:
@@ -61,7 +59,7 @@ Visualization Manager:
       Color: 130; 130; 130
       Enabled: false
       Line Style:
-        Line Width: 0.029999999329447746
+        Line Width: 0.0299999993
         Value: Lines
       Name: Grid
       Normal Cell Count: 0
@@ -77,7 +75,7 @@ Visualization Manager:
       Enabled: false
       Length: 1
       Name: Axes
-      Radius: 0.10000000149011612
+      Radius: 0.100000001
       Reference Frame: <Fixed Frame>
       Value: false
     - Class: rviz/Group
@@ -85,8 +83,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 0.788192093372345
-            Min Value: -2.565322160720825
+            Max Value: 0.788192093
+            Min Value: -2.56532216
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -97,24 +95,26 @@ Visualization Manager:
           Enabled: false
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 3
-          Size (m): 0.10000000149011612
+          Size (m): 0.100000001
           Style: Flat Squares
           Topic: /cloud_effected
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
           Value: false
-        - Alpha: 0.15000000596046448
+        - Alpha: 0.150000006
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 27.185606002807617
-            Min Value: -2.278883457183838
+            Max Value: 27.185606
+            Min Value: -2.27888346
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -125,13 +125,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: pointcloud_map
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: false
           Size (Pixels): 1.5
-          Size (m): 0.009999999776482582
+          Size (m): 0.00999999978
           Style: Points
           Topic: /cloud_registered
           Unreliable: false
@@ -153,7 +155,9 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: current_scan
           Position Transformer: XYZ
           Queue Size: 10
@@ -181,13 +185,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: feature_map
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.10000000149011612
+          Size (m): 0.100000001
           Style: Points
           Topic: /Laser_map
           Unreliable: false
@@ -199,11 +205,11 @@ Visualization Manager:
           Class: rviz/Path
           Color: 255; 255; 255
           Enabled: true
-          Head Diameter: 0.30000001192092896
-          Head Length: 0.20000000298023224
-          Length: 0.30000001192092896
+          Head Diameter: 0.300000012
+          Head Length: 0.200000003
+          Length: 0.300000012
           Line Style: Billboards
-          Line Width: 0.20000000298023224
+          Line Width: 0.200000003
           Name: Path
           Offset:
             X: 0
@@ -211,13 +217,13 @@ Visualization Manager:
             Z: 0
           Pose Color: 255; 85; 255
           Pose Style: None
-          Radius: 0.029999999329447746
-          Shaft Diameter: 0.10000000149011612
-          Shaft Length: 0.10000000149011612
+          Radius: 0.0299999993
+          Shaft Diameter: 0.100000001
+          Shaft Length: 0.100000001
           Topic: /path
           Unreliable: false
           Value: true
-        - Angle Tolerance: 0.009999999776482582
+        - Angle Tolerance: 0.00999999978
           Class: rviz/Odometry
           Covariance:
             Orientation:
@@ -229,7 +235,7 @@ Visualization Manager:
               Scale: 1
               Value: true
             Position:
-              Alpha: 0.30000001192092896
+              Alpha: 0.300000012
               Color: 204; 51; 204
               Scale: 1
               Value: true
@@ -237,21 +243,21 @@ Visualization Manager:
           Enabled: true
           Keep: 1
           Name: Odometry
-          Position Tolerance: 0.009999999776482582
+          Position Tolerance: 0.00999999978
           Shape:
             Alpha: 1
-            Axes Length: 0.20000000298023224
-            Axes Radius: 0.10000000149011612
+            Axes Length: 0.200000003
+            Axes Radius: 0.100000001
             Color: 255; 25; 0
-            Head Length: 0.30000001192092896
-            Head Radius: 0.10000000149011612
+            Head Length: 0.300000012
+            Head Radius: 0.100000001
             Shaft Length: 1
-            Shaft Radius: 0.05000000074505806
+            Shaft Radius: 0.0500000007
             Value: Axes
           Topic: /r2live/odometry
           Unreliable: false
           Value: true
-        - Angle Tolerance: 0.0010000000474974513
+        - Angle Tolerance: 0.00100000005
           Class: rviz/Odometry
           Covariance:
             Orientation:
@@ -263,7 +269,7 @@ Visualization Manager:
               Scale: 1
               Value: true
             Position:
-              Alpha: 0.30000001192092896
+              Alpha: 0.300000012
               Color: 204; 51; 204
               Scale: 1
               Value: true
@@ -271,23 +277,23 @@ Visualization Manager:
           Enabled: true
           Keep: 1
           Name: Odometry
-          Position Tolerance: 0.0010000000474974513
+          Position Tolerance: 0.00100000005
           Shape:
             Alpha: 1
             Axes Length: 1
-            Axes Radius: 0.30000001192092896
+            Axes Radius: 0.300000012
             Color: 255; 25; 0
-            Head Length: 0.30000001192092896
-            Head Radius: 0.10000000149011612
+            Head Length: 0.300000012
+            Head Radius: 0.100000001
             Shaft Length: 1
-            Shaft Radius: 0.05000000074505806
+            Shaft Radius: 0.0500000007
             Value: Axes
           Topic: /aft_mapped_to_init
           Unreliable: false
           Value: true
       Enabled: true
       Name: LIO
-    - Angle Tolerance: 0.10000000149011612
+    - Angle Tolerance: 0.100000001
       Class: rviz/Odometry
       Covariance:
         Orientation:
@@ -299,7 +305,7 @@ Visualization Manager:
           Scale: 1
           Value: true
         Position:
-          Alpha: 0.30000001192092896
+          Alpha: 0.300000012
           Color: 204; 51; 204
           Scale: 1
           Value: true
@@ -307,16 +313,16 @@ Visualization Manager:
       Enabled: false
       Keep: 1
       Name: Odometry
-      Position Tolerance: 0.10000000149011612
+      Position Tolerance: 0.100000001
       Shape:
         Alpha: 1
         Axes Length: 0.5
-        Axes Radius: 0.10000000149011612
+        Axes Radius: 0.100000001
         Color: 255; 25; 0
-        Head Length: 0.30000001192092896
-        Head Radius: 0.10000000149011612
+        Head Length: 0.300000012
+        Head Radius: 0.100000001
         Shaft Length: 1
-        Shaft Radius: 0.05000000074505806
+        Shaft Radius: 0.0500000007
         Value: Axes
       Topic: /camera_odom
       Unreliable: false
@@ -326,11 +332,11 @@ Visualization Manager:
       Class: rviz/Path
       Color: 25; 255; 0
       Enabled: false
-      Head Diameter: 0.30000001192092896
-      Head Length: 0.20000000298023224
-      Length: 0.30000001192092896
+      Head Diameter: 0.300000012
+      Head Length: 0.200000003
+      Length: 0.300000012
       Line Style: Lines
-      Line Width: 0.20000000298023224
+      Line Width: 0.200000003
       Name: Path
       Offset:
         X: 0
@@ -338,9 +344,9 @@ Visualization Manager:
         Z: 0
       Pose Color: 255; 85; 255
       Pose Style: None
-      Radius: 0.029999999329447746
-      Shaft Diameter: 0.10000000149011612
-      Shaft Length: 0.10000000149011612
+      Radius: 0.0299999993
+      Shaft Diameter: 0.100000001
+      Shaft Length: 0.100000001
       Topic: /camera_path
       Unreliable: false
       Value: false
@@ -359,13 +365,15 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
+      Max Intensity: 4096
       Min Color: 0; 0; 0
+      Min Intensity: 0
       Name: track_pts
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
       Size (Pixels): 1.5
-      Size (m): 0.30000001192092896
+      Size (m): 0.300000012
       Style: Spheres
       Topic: /track_pts
       Unreliable: false
@@ -377,8 +385,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -389,13 +397,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_0
           Unreliable: false
@@ -405,8 +415,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -417,13 +427,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_1
           Unreliable: false
@@ -433,8 +445,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -445,13 +457,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_2
           Unreliable: false
@@ -461,8 +475,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -473,13 +487,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_3
           Unreliable: false
@@ -489,8 +505,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -501,13 +517,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_4
           Unreliable: false
@@ -517,8 +535,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -529,13 +547,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_5
           Unreliable: false
@@ -545,8 +565,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -557,13 +577,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_6
           Unreliable: false
@@ -573,8 +595,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -585,13 +607,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_7
           Unreliable: false
@@ -601,8 +625,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -613,13 +637,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_8
           Unreliable: false
@@ -629,8 +655,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -641,13 +667,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_9
           Unreliable: false
@@ -657,8 +685,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -669,13 +697,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_10
           Unreliable: false
@@ -685,8 +715,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -697,13 +727,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_11
           Unreliable: false
@@ -713,8 +745,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -725,13 +757,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_12
           Unreliable: false
@@ -741,8 +775,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -753,13 +787,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_13
           Unreliable: false
@@ -769,8 +805,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -781,13 +817,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_14
           Unreliable: false
@@ -797,8 +835,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -809,13 +847,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_15
           Unreliable: false
@@ -825,8 +865,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -837,13 +877,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_16
           Unreliable: false
@@ -853,8 +895,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -865,13 +907,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_17
           Unreliable: false
@@ -881,8 +925,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -893,13 +937,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_18
           Unreliable: false
@@ -909,8 +955,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -921,13 +967,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_19
           Unreliable: false
@@ -937,8 +985,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -949,13 +997,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_20
           Unreliable: false
@@ -965,8 +1015,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -977,13 +1027,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_21
           Unreliable: false
@@ -993,8 +1045,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1005,13 +1057,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_22
           Unreliable: false
@@ -1021,8 +1075,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1033,13 +1087,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_23
           Unreliable: false
@@ -1049,8 +1105,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1061,13 +1117,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_24
           Unreliable: false
@@ -1077,8 +1135,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1089,13 +1147,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_25
           Unreliable: false
@@ -1105,8 +1165,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1117,13 +1177,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_26
           Unreliable: false
@@ -1133,8 +1195,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1145,13 +1207,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_27
           Unreliable: false
@@ -1161,8 +1225,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1173,13 +1237,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_28
           Unreliable: false
@@ -1189,8 +1255,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1201,13 +1267,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_29
           Unreliable: false
@@ -1217,8 +1285,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1229,13 +1297,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_30
           Unreliable: false
@@ -1245,8 +1315,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1257,13 +1327,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_31
           Unreliable: false
@@ -1273,8 +1345,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1285,13 +1357,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_32
           Unreliable: false
@@ -1301,8 +1375,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1313,13 +1387,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_33
           Unreliable: false
@@ -1329,8 +1405,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1341,13 +1417,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_34
           Unreliable: false
@@ -1357,8 +1435,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1369,13 +1447,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_35
           Unreliable: false
@@ -1385,8 +1465,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1397,13 +1477,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_36
           Unreliable: false
@@ -1413,8 +1495,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1425,13 +1507,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_37
           Unreliable: false
@@ -1441,8 +1525,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1453,13 +1537,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_38
           Unreliable: false
@@ -1469,8 +1555,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1481,13 +1567,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_39
           Unreliable: false
@@ -1497,8 +1585,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1509,13 +1597,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_40
           Unreliable: false
@@ -1525,8 +1615,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1537,13 +1627,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_41
           Unreliable: false
@@ -1553,8 +1645,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1565,13 +1657,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_42
           Unreliable: false
@@ -1581,8 +1675,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1593,13 +1687,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_43
           Unreliable: false
@@ -1609,8 +1705,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1621,13 +1717,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_44
           Unreliable: false
@@ -1637,8 +1735,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1649,13 +1747,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_45
           Unreliable: false
@@ -1665,8 +1765,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1677,13 +1777,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_46
           Unreliable: false
@@ -1693,8 +1795,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1705,13 +1807,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_47
           Unreliable: false
@@ -1721,8 +1825,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1733,13 +1837,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_48
           Unreliable: false
@@ -1749,8 +1855,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1761,13 +1867,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_49
           Unreliable: false
@@ -1777,8 +1885,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1789,13 +1897,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_50
           Unreliable: false
@@ -1805,8 +1915,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1817,13 +1927,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_51
           Unreliable: false
@@ -1833,8 +1945,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1845,13 +1957,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_52
           Unreliable: false
@@ -1861,8 +1975,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1873,13 +1987,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_53
           Unreliable: false
@@ -1889,8 +2005,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1901,13 +2017,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_54
           Unreliable: false
@@ -1917,8 +2035,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1929,13 +2047,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_55
           Unreliable: false
@@ -1945,8 +2065,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1957,13 +2077,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_56
           Unreliable: false
@@ -1973,8 +2095,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -1985,13 +2107,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_57
           Unreliable: false
@@ -2001,8 +2125,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -2013,13 +2137,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_58
           Unreliable: false
@@ -2029,8 +2155,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 203.29579162597656
-            Min Value: -3.4969892501831055
+            Max Value: 203.295792
+            Min Value: -3.49698925
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -2041,13 +2167,15 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
+          Max Intensity: 4096
           Min Color: 0; 0; 0
+          Min Intensity: 0
           Name: PointCloud2
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 1.5
-          Size (m): 0.05000000074505806
+          Size (m): 0.0500000007
           Style: Points
           Topic: /RGB_map_59
           Unreliable: false
@@ -2058,7 +2186,7 @@ Visualization Manager:
       Name: RGB_map
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /camera/image_color
+      Image Topic: /track_img
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -2093,10 +2221,7 @@ Visualization Manager:
     - Class: rviz/FocusCamera
     - Class: rviz/Measure
     - Class: rviz/SetInitialPose
-      Theta std deviation: 0.2617993950843811
       Topic: /initialpose
-      X std deviation: 0.5
-      Y std deviation: 0.5
     - Class: rviz/SetGoal
       Topic: /move_base_simple/goal
     - Class: rviz/PublishPoint
@@ -2106,75 +2231,75 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 149.66188049316406
+      Distance: 149.66188
       Enable Stereo Rendering:
-        Stereo Eye Separation: 0.05999999865889549
+        Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -7.8056182861328125
-        Y: -0.7874506711959839
-        Z: -14.619412422180176
+        X: -7.80561829
+        Y: -0.787450671
+        Z: -14.6194124
       Focal Shape Fixed Size: false
-      Focal Shape Size: 0.05000000074505806
+      Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
-      Near Clip Distance: 0.009999999776482582
-      Pitch: 1.1847965717315674
+      Near Clip Distance: 0.00999999978
+      Pitch: 1.18479657
       Target Frame: aft_mapped
       Value: Orbit (rviz)
-      Yaw: 3.47957444190979
+      Yaw: 3.47957444
     Saved:
       - Class: rviz/ThirdPersonFollower
-        Distance: 2.466799259185791
+        Distance: 2.46679926
         Enable Stereo Rendering:
-          Stereo Eye Separation: 0.05999999865889549
+          Stereo Eye Separation: 0.0599999987
           Stereo Focal Distance: 1
           Swap Stereo Eyes: false
           Value: false
         Focal Point:
-          X: -0.11063814163208008
-          Y: 0.30463317036628723
+          X: -0.110638142
+          Y: 0.30463317
           Z: 0
         Focal Shape Fixed Size: false
-        Focal Shape Size: 0.05000000074505806
+        Focal Shape Size: 0.0500000007
         Invert Z Axis: false
         Name: ThirdPersonFollower
-        Near Clip Distance: 0.009999999776482582
-        Pitch: 0.20539864897727966
+        Near Clip Distance: 0.00999999978
+        Pitch: 0.205398649
         Target Frame: aft_mapped
         Value: ThirdPersonFollower (rviz)
-        Yaw: 3.13038969039917
+        Yaw: 3.13038969
       - Class: rviz/Orbit
-        Distance: 10.964186668395996
+        Distance: 10.9641867
         Enable Stereo Rendering:
-          Stereo Eye Separation: 0.05999999865889549
+          Stereo Eye Separation: 0.0599999987
           Stereo Focal Distance: 1
           Swap Stereo Eyes: false
           Value: false
         Focal Point:
-          X: 0.6367835998535156
-          Y: 0.2962583005428314
-          Z: 2.01882266998291
+          X: 0.6367836
+          Y: 0.296258301
+          Z: 2.01882267
         Focal Shape Fixed Size: true
-        Focal Shape Size: 0.05000000074505806
+        Focal Shape Size: 0.0500000007
         Invert Z Axis: false
         Name: Orbit
-        Near Clip Distance: 0.009999999776482582
-        Pitch: 1.3853975534439087
+        Near Clip Distance: 0.00999999978
+        Pitch: 1.38539755
         Target Frame: aft_mapped
         Value: Orbit (rviz)
-        Yaw: 3.0353875160217285
+        Yaw: 3.03538752
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 2060
+  Height: 1056
   Hide Left Dock: false
   Hide Right Dock: true
   Input image:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000004f0000007d9fc0200000019fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f0070006500720074006900650073020000050d0000039500000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000001200720061007700200049006d0061006700650000000028000000300000000000000000fb00000012007200610077005f0069006d0061006700650000000299000001680000000000000000fb0000000c00430061006d0065007200610000000000000002330000000000000000fb00000020006c006f006f0070005f006d0061007400630068005f0069006d0061006700650000000230000001380000000000000000fb0000000a0049006d00610067006500000000000000019d0000000000000000fb000000160049006e00700075007400200069006d0061006700650100000016000004200000001600fffffffb000000220066006500610074007500720065007300200074007200610063006b0069006e006701000003ba0000028d0000000000000000fb0000000c00430061006d00650072006101000001e80000001d0000000000000000fb0000000a0049006d0061006700650100000416000004100000000000000000fb0000001c0054007200610063006b0065006400200070006f0069006e0074007300000003760000021c0000001600fffffffb000000100044006900730070006c006100790073010000043c000003b3000000c900fffffffb000000100044006900730070006c00610079007300000005950000035f000000c900fffffffc000000280000011e0000000000fffffffa000000000100000002fb0000001200720061007700200049006d0061006700650000000000ffffffff0000000000000000fb0000001a0074007200610063006b0065006400200069006d0061006700650100000000000002370000000000000000fb0000001000410052005f0069006d0061006700650100000373000000160000000000000000fb0000001200720061007700200069006d006100670065010000038f000000160000000000000000fb000000100044006900730070006c0061007900730100000427000003ff0000000000000000fb0000000c00430061006d006500720061010000059b0000028b0000000000000000fb0000000a0049006d0061006700650100000739000000ed0000000000000000000000010000020800000826fc0200000004fb0000000a00560069006500770073000000000000000826000000a400fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb000000100044006900730070006c006100790073000000040a0000041c0000000000000000fb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000f00000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e1000001970000000300000e9e0000004afc0100000002fb0000000800540069006d00650200000062000003ec000004f5000001e0fb0000000800540069006d00650100000000000004500000000000000000000009a8000007d900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730000000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000004f000000402fc0200000019fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006100fffffffb0000001e0054006f006f006c002000500072006f0070006500720074006900650073020000050d0000039500000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000001200720061007700200049006d0061006700650000000028000000300000000000000000fb00000012007200610077005f0069006d0061006700650000000299000001680000000000000000fb0000000c00430061006d0065007200610000000000000002330000000000000000fb00000020006c006f006f0070005f006d0061007400630068005f0069006d0061006700650000000230000001380000000000000000fb0000000a0049006d00610067006500000000000000019d0000000000000000fb000000160049006e00700075007400200069006d00610067006501000000000000021a0000001600fffffffb000000220066006500610074007500720065007300200074007200610063006b0069006e006701000003ba0000028d0000000000000000fb0000000c00430061006d00650072006101000001e80000001d0000000000000000fb0000000a0049006d0061006700650100000416000004100000000000000000fb0000001c0054007200610063006b0065006400200070006f0069006e0074007300000003760000021c0000001600fffffffb000000100044006900730070006c0061007900730100000220000001e2000000d700fffffffb000000100044006900730070006c00610079007300000005950000035f000000d700fffffffc000000280000011e0000000000fffffffa000000000100000002fb0000001200720061007700200049006d0061006700650000000000ffffffff0000000000000000fb0000001a0074007200610063006b0065006400200069006d0061006700650100000000000002370000000000000000fb0000001000410052005f0069006d0061006700650100000373000000160000000000000000fb0000001200720061007700200069006d006100670065010000038f000000160000000000000000fb000000100044006900730070006c0061007900730100000427000003ff0000000000000000fb0000000c00430061006d006500720061010000059b0000028b0000000000000000fb0000000a0049006d0061006700650100000739000000ed0000000000000000000000010000020800000826fc0200000004fb0000000a00560069006500770073000000000000000826000000ad00fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb000000100044006900730070006c006100790073000000040a0000041c0000000000000000fb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000f00000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e1000001970000000300000e9e0000004afc0100000002fb0000000800540069006d0065020000006200000258000004f5000001e0fb0000000800540069006d00650100000000000004500000000000000000000002490000040200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730000000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -2183,6 +2308,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: true
-  Width: 3742
-  X: 98
-  Y: 44
+  Width: 1855
+  X: 65
+  Y: 24

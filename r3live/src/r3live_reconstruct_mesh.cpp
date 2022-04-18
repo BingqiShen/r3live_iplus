@@ -93,7 +93,7 @@ pcl::PointCloud<PointType>::Ptr pcl_pc_rgb = nullptr;
 pcl::KdTreeFLANN<PointType> kdtree;
 
 
-// TODO
+// TODO 提取可用于MVS的点m_pointcloud？
 void r3live_map_to_mvs_scene( Offline_map_recorder &r3live_map_recorder, MVS::ImageArr &m_images, MVS::PointCloud &m_pointcloud )
 {
     vec_3   last_pose_t = vec_3( -100, 0, 0 );
@@ -103,43 +103,47 @@ void r3live_map_to_mvs_scene( Offline_map_recorder &r3live_map_recorder, MVS::Im
     cout << "Number of image frames: " << number_of_image_frame << endl;
 
     Eigen::Matrix3d camera_intrinsic;
-    int             image_width = r3live_map_recorder.m_image_pose_vec[ 0 ]->m_img_cols;
-    int             image_heigh = r3live_map_recorder.m_image_pose_vec[ 0 ]->m_img_rows;
-    double          fx = r3live_map_recorder.m_image_pose_vec[ 0 ]->fx;
-    double          fy = r3live_map_recorder.m_image_pose_vec[ 0 ]->fy;
-    double          cx = r3live_map_recorder.m_image_pose_vec[ 0 ]->cx;
-    double          cy = r3live_map_recorder.m_image_pose_vec[ 0 ]->cy;
+    int image_width = r3live_map_recorder.m_image_pose_vec[0]->m_img_cols;
+    int image_heigh = r3live_map_recorder.m_image_pose_vec[0]->m_img_rows;
+    double fx = r3live_map_recorder.m_image_pose_vec[0]->fx;
+    double fy = r3live_map_recorder.m_image_pose_vec[0]->fy;
+    double cx = r3live_map_recorder.m_image_pose_vec[0]->cx;
+    double cy = r3live_map_recorder.m_image_pose_vec[0]->cy;
     camera_intrinsic << fx / image_width, 0, cx / image_width, 0, fy / image_width, cy / image_width, 0, 0, 1;
     // camera_intrinsic << fx , 0, cx , 0, fy , cy , 0, 0, 1;
-    cout << "Iamge resolution  = " << r3live_map_recorder.m_image_pose_vec[ 0 ]->m_img_cols << " X " << r3live_map_recorder.m_image_pose_vec[ 0 ]->m_img_rows << endl;
+    cout << "Image resolution  = " << r3live_map_recorder.m_image_pose_vec[0]->m_img_cols << " X " << r3live_map_recorder.m_image_pose_vec[0]->m_img_rows << endl;
     // cout << "Camera intrinsic: \r\n" << camera_intrinsic << endl;
 
     MVS::Platform m_platforms = MVS::Platform();
     m_platforms.name = std::string( "platfrom" );
     m_platforms.cameras.push_back( MVS::Platform::Camera() );
-    m_platforms.cameras[ 0 ].K = camera_intrinsic;
-    m_platforms.cameras[ 0 ].R = Eigen::Matrix3d::Identity();
-    m_platforms.cameras[ 0 ].C = Eigen::Vector3d::Zero();
+    m_platforms.cameras[0].K = camera_intrinsic;
+    m_platforms.cameras[0].R = Eigen::Matrix3d::Identity();
+    m_platforms.cameras[0].C = Eigen::Vector3d::Zero();
 
-    std::unordered_map< std::shared_ptr< RGB_pts >, std::vector< int > > m_pts_with_view;
+    std::unordered_map< std::shared_ptr<RGB_pts>, std::vector<int> > m_pts_with_view;
     for ( int frame_idx = 0; frame_idx < number_of_image_frame; frame_idx++ )
     {
-        std::shared_ptr< Image_frame > img_ptr = r3live_map_recorder.m_image_pose_vec[ frame_idx ];
-        vec_3                              pose_t = -img_ptr->m_pose_c2w_q.toRotationMatrix().transpose() * img_ptr->m_pose_c2w_t;
-        if ( ( pose_t - last_pose_t ).norm() < g_add_keyframe_t && ( img_ptr->m_pose_c2w_q.angularDistance( last_pose_q ) * 57.3 < g_add_keyframe_R ) )
+        std::shared_ptr< Image_frame > img_ptr = r3live_map_recorder.m_image_pose_vec[frame_idx];
+        vec_3 pose_t = -img_ptr->m_pose_c2w_q.toRotationMatrix().transpose() * img_ptr->m_pose_c2w_t;
+        
+        // 按R，t选出关键帧
+        if ( (pose_t - last_pose_t).norm() < g_add_keyframe_t 
+                && (img_ptr->m_pose_c2w_q.angularDistance(last_pose_q) * 57.3 < g_add_keyframe_R) )
         {
             continue;
         }
         MVS::Platform::Pose pose;
-        MVS::Image          image;
+        MVS::Image image;
 
         pose.R = img_ptr->m_pose_c2w_q.toRotationMatrix();
         pose.C = pose_t;
         last_pose_t = pose_t;
         last_pose_q = img_ptr->m_pose_c2w_q;
-        m_platforms.poses.push_back( pose );
+        m_platforms.poses.push_back(pose);
         // cout << "[ " << frame_idx << " ]: q = " << img_ptr->m_pose_c2w_q.coeffs().transpose() << " | "<< pose_t.transpose() << endl;
 
+        // m_image_id初始为0
         image.ID = m_image_id;
         m_image_id++;
         image.poseID = image.ID;
@@ -156,7 +160,7 @@ void r3live_map_to_mvs_scene( Offline_map_recorder &r3live_map_recorder, MVS::Im
 
         for ( int pt_idx = 0; pt_idx < r3live_map_recorder.m_pts_in_views_vec[ frame_idx ].size(); pt_idx++ )
         {
-            m_pts_with_view[ r3live_map_recorder.m_pts_in_views_vec[ frame_idx ][ pt_idx ] ].push_back( image.ID  );
+            m_pts_with_view[ r3live_map_recorder.m_pts_in_views_vec[frame_idx][pt_idx] ].push_back( image.ID  );
         }
         cout << ANSI_DELETE_CURRENT_LINE;
         printf( "\33[2K\rAdd frames: %u%%, total_points = %u ...", frame_idx * 100 / ( number_of_image_frame - 1 ), m_pts_with_view.size() );
@@ -180,6 +184,7 @@ void r3live_map_to_mvs_scene( Offline_map_recorder &r3live_map_recorder, MVS::Im
     pcl_pc_rgb->reserve(1e8);
     for ( std::unordered_map< std::shared_ptr< RGB_pts >, std::vector< int > >::iterator it = m_pts_with_view.begin(); it != m_pts_with_view.end(); it++ )
     {
+        // 被观察到5次以上的点才被选入
         if ( ( it->second.size() >= 0 ) && ( ( it->first )->m_N_rgb > 5 ) )
         {
             acc_count++;
@@ -188,12 +193,12 @@ void r3live_map_to_mvs_scene( Offline_map_recorder &r3live_map_recorder, MVS::Im
             MVS::PointCloud::ColorArr color_arr;
             MVS::PointCloud::Color    color;
             vec_3                     pt_pos = ( ( it->first ) )->get_pos();
-            pt3d.x = pt_pos( 0 );
-            pt3d.y = pt_pos( 1 );
-            pt3d.z = pt_pos( 2 );
-            color.r = ( ( it->first ) )->m_rgb[ 2 ];
-            color.g = ( ( it->first ) )->m_rgb[ 1 ];
-            color.b = ( ( it->first ) )->m_rgb[ 0 ];
+            pt3d.x = pt_pos(0);
+            pt3d.y = pt_pos(1);
+            pt3d.z = pt_pos(2);
+            color.r = ( ( it->first ) )->m_rgb[2];
+            color.g = ( ( it->first ) )->m_rgb[1];
+            color.b = ( ( it->first ) )->m_rgb[0];
             PointType pcl_pt ;
             pcl_pt.x = pt3d.x;
             pcl_pt.y = pt3d.y;
@@ -233,7 +238,7 @@ void build_pcl_kdtree( Offline_map_recorder &r3live_map_recorder )
     {
         pcl_pc_rgb = boost::make_shared< pcl::PointCloud< PointType > >();
     }
-    if ( 1 ) // if reload all pts.
+    if (1) // if reload all pts.
     {
         pcl_pc_rgb->clear();
         pcl_pc_rgb->points.resize( r3live_map_recorder.m_global_map->m_rgb_pts_vec.size() );
@@ -241,18 +246,18 @@ void build_pcl_kdtree( Offline_map_recorder &r3live_map_recorder )
         {
             PointType  pcl_pt;
             
-            RGB_pt_ptr rgb_pt = r3live_map_recorder.m_global_map->m_rgb_pts_vec[ i ];
+            RGB_pt_ptr rgb_pt = r3live_map_recorder.m_global_map->m_rgb_pts_vec[i];
             if(rgb_pt->m_N_rgb < 5) 
             {
                 continue;
             }
-            pcl_pt.x = rgb_pt->m_pos[ 0 ];
-            pcl_pt.y = rgb_pt->m_pos[ 1 ];
-            pcl_pt.z = rgb_pt->m_pos[ 2 ];
-            pcl_pt.r = rgb_pt->m_rgb[ 2 ];
-            pcl_pt.g = rgb_pt->m_rgb[ 1 ];
-            pcl_pt.b = rgb_pt->m_rgb[ 0 ];
-            pcl_pc_rgb->points[ i ]= pcl_pt ;
+            pcl_pt.x = rgb_pt->m_pos[0];
+            pcl_pt.y = rgb_pt->m_pos[1];
+            pcl_pt.z = rgb_pt->m_pos[2];
+            pcl_pt.r = rgb_pt->m_rgb[2];
+            pcl_pt.g = rgb_pt->m_rgb[1];
+            pcl_pt.b = rgb_pt->m_rgb[0];
+            pcl_pc_rgb->points[i]= pcl_pt;
         }
     }
     kdtree.setInputCloud( pcl_pc_rgb );
@@ -266,10 +271,12 @@ void reconstruct_mesh( Offline_map_recorder &r3live_map_recorder, std::string ou
     MVS::PointCloud m_pointcloud;
     MVS::Mesh       reconstructed_mesh;
 
+    // 提取用于MVS的图像m_images和特征点m_pointcloud
     r3live_map_to_mvs_scene( r3live_map_recorder, m_images, m_pointcloud );
     // return;
     
-    ReconstructMesh( g_insert_pt_dis, g_if_use_free_space_support, 4, g_thickness_factor, g_quality_factor, reconstructed_mesh, m_images, m_pointcloud );
+    ReconstructMesh( g_insert_pt_dis, g_if_use_free_space_support, 4, 
+                     g_thickness_factor, g_quality_factor, reconstructed_mesh, m_images, m_pointcloud );
     printf( "Mesh reconstruction completed: %u vertices, %u faces\n", reconstructed_mesh.vertices.GetSize(), reconstructed_mesh.faces.GetSize() );
     
     cout << "Clean mesh [1/3]: ";
@@ -313,13 +320,13 @@ void texture_mesh(  Offline_map_recorder &r3live_map_recorder, std::string input
         int      green = 0;
         int      blue = 0;
         uint32_t rgb;
-        if ( kdtree.nearestKSearch( rgb_pointcloud.points[ i ], smooth_factor, pointIdxNKNSearch, pointNKNSquaredDistance ) > 0 )
+        if ( kdtree.nearestKSearch( rgb_pointcloud.points[i], smooth_factor, pointIdxNKNSearch, pointNKNSquaredDistance ) > 0 )
         {
             for ( int j = 0; j < pointIdxNKNSearch.size(); ++j )
             {
-                r = pcl_pc_rgb->points[ pointIdxNKNSearch[ j ] ].r;
-                g = pcl_pc_rgb->points[ pointIdxNKNSearch[ j ] ].g;
-                b = pcl_pc_rgb->points[ pointIdxNKNSearch[ j ] ].b;
+                r = pcl_pc_rgb->points[ pointIdxNKNSearch[j] ].r;
+                g = pcl_pc_rgb->points[ pointIdxNKNSearch[j] ].g;
+                b = pcl_pc_rgb->points[ pointIdxNKNSearch[j] ].b;
                 red += int( r );
                 green += int( g );
                 blue += int( b );
@@ -351,6 +358,7 @@ void texture_mesh(  Offline_map_recorder &r3live_map_recorder, std::string input
 void load_parameter(ros::NodeHandle & m_ros_node_handle )
 {
     std::string _offline_map_name;
+    // 两个图像关键帧之间的最少旋转平移变化量
     Common_tools::get_ros_parameter( m_ros_node_handle, "add_keyframe_R", g_add_keyframe_R, 10.0 );
     Common_tools::get_ros_parameter( m_ros_node_handle, "add_keyframe_t", g_add_keyframe_t, 0.15 );
    

@@ -56,7 +56,7 @@ class Offline_map_recorder
     std::string m_working_dir;
 
     std::unordered_map< std::shared_ptr< RGB_pts >, std::vector< int > > m_pts_with_view;
-    std::vector< std::shared_ptr< Image_frame > >                    m_image_pose_vec;
+    std::vector< std::shared_ptr< Image_frame > >                        m_image_pose_vec;
     std::vector< std::vector< std::shared_ptr< RGB_pts > > >             m_pts_in_views_vec;
     std::deque< std::vector< RGB_pt_ptr > >                              m_visited_pts_buffer;
     std::vector< std::unordered_set< RGB_voxel_ptr > >                   m_visited_voxel_vec;

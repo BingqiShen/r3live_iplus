@@ -229,10 +229,13 @@ void Rgbmap_tracker::reject_error_tracking_pts( std::shared_ptr< Image_frame > &
 //     return hist_equalized_image;
 // }
 
+// 光流追踪
 void Rgbmap_tracker::track_img( std::shared_ptr< Image_frame > &img_pose, double dis, int if_use_opencv )
 {
     Common_tools::Timer tim;
+    // 当前帧图片
     m_current_frame = img_pose->m_img;
+    // 当前帧时间
     m_current_frame_time = img_pose->m_timestamp;
     m_map_rgb_pts_in_current_frame_pos.clear();
     if ( m_current_frame.empty() )
@@ -255,7 +258,7 @@ void Rgbmap_tracker::track_img( std::shared_ptr< Image_frame > &img_pose, double
     reduce_vector( m_old_ids, status );
     reduce_vector( m_current_tracked_pts, status );
 
-    int     after_track = m_last_tracked_pts.size();
+    int after_track = m_last_tracked_pts.size();
     cv::Mat mat_F;
 
     tim.tic( "Reject_F" );
@@ -315,6 +318,7 @@ int Rgbmap_tracker::get_all_tracked_pts( std::vector< std::vector< cv::Point2f >
     return hit_count;
 }
 
+// remove point using PnP.
 int Rgbmap_tracker::remove_outlier_using_ransac_pnp( std::shared_ptr< Image_frame > &img_pose, int if_remove_ourlier )
 {
     Common_tools::Timer tim;
@@ -337,11 +341,12 @@ int Rgbmap_tracker::remove_outlier_using_ransac_pnp( std::shared_ptr< Image_fram
     {
         return 0;
     }
-    if ( 1 )
+    if (1)
     {
         std::vector< int > status;
         try
         {
+            // PnP求解相机位姿，得到相机在世界坐标系下的位姿：r_vec, t_vec
             cv::solvePnPRansac( pt_3d_vec, pt_2d_vec, m_intrinsic, cv::Mat(), r_vec, t_vec, false, 200, 1.5, 0.99,
                                 status ); // SOLVEPNP_ITERATIVE
         }
@@ -382,7 +387,7 @@ int Rgbmap_tracker::remove_outlier_using_ransac_pnp( std::shared_ptr< Image_fram
     
     if_update = 1;
     t_last_estimated = solver_t;
-    if ( if_update )
+    if (if_update)
     {
 
         img_pose->m_pnp_pose_w2c_q = solver_q;

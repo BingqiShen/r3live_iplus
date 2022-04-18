@@ -1,7 +1,7 @@
 <launch>
     
-    <param name="add_keyframe_R" value="10.0" />   <!-- 10   -->
-    <param name="add_keyframe_t" value="0.15" />   <!-- 0.15 -->
+    <param name="add_keyframe_R" value="5.0" />   <!-- 10   -->
+    <param name="add_keyframe_t" value="0.1" />   <!-- 0.15 -->
 
     <!-- The minimum distance (current point to existing points, unit in pixels) for inserting a new point to mesh (set 0 to disabled this constrain) -->
     <param name="insert_pt_dis" value="0.0" />
@@ -26,13 +26,13 @@
     <param name="if_remove_spikes" value="true" />
     
     <!-- Try to close small holes (with size smaller the given value) in the reconstructed surface (0 - disabled) -->
-    <param name="close_holes_dist" value="20" />
+    <param name="close_holes_dist" value="40" />
 
     <!-- Factor for smoothing the reconstructed surface, the bigger the value, the smoother the mesh. -->
     <param name="smooth_mesh_factor" value="5" />
     
     <!-- The working directory, where we input the offline maps files and output the reconstructed mesh  -->
-    <param name="working_dir" value="$(env HOME)/r3live_output" />
+    <param name="working_dir" value="/media/jz/5b3f1040-e4bd-4eee-8340-b1e1fbc574ba/home/jz/Lidar_Camera/r3live_bag/r3live_output" />
     
     <!-- The factor of smoothing the texture of mesh -->
     <param name="texturing_smooth_factor" value="10" />

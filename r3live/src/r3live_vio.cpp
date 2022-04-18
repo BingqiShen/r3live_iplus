@@ -62,7 +62,7 @@ void dump_lio_state_to_log( FILE *fp )
     if ( fp != nullptr && g_camera_lidar_queue.m_if_dump_log )
     {
         Eigen::Vector3d rot_angle = Sophus::SO3d( Eigen::Quaterniond( g_lio_state.rot_end ) ).log();
-        Eigen::Vector3d rot_ext_i2c_angle = Sophus::SO3d( Eigen::Quaterniond( g_lio_state.rot_ext_i2c ) ).log();
+        Eigen::Vector3d rot_ext_i2c_angle = Sophus::SO3d( Eigen::Quaterniond( g_lio_state.rot_ext_c2i ) ).log();
         fprintf( fp, "%lf ", g_lio_state.last_update_time - g_camera_lidar_queue.m_first_imu_time ); // Time   [0]
         fprintf( fp, "%lf %lf %lf ", rot_angle( 0 ), rot_angle( 1 ), rot_angle( 2 ) );               // Angle  [1-3]
         fprintf( fp, "%lf %lf %lf ", g_lio_state.pos_end( 0 ), g_lio_state.pos_end( 1 ),
@@ -79,8 +79,8 @@ void dump_lio_state_to_log( FILE *fp )
                  g_lio_state.gravity( 2 ) ); // Gravity[22-24]
         fprintf( fp, "%lf %lf %lf ", rot_ext_i2c_angle( 0 ), rot_ext_i2c_angle( 1 ),
                  rot_ext_i2c_angle( 2 ) ); // Rot_ext_i2c[25-27]
-        fprintf( fp, "%lf %lf %lf ", g_lio_state.pos_ext_i2c( 0 ), g_lio_state.pos_ext_i2c( 1 ),
-                 g_lio_state.pos_ext_i2c( 2 ) ); // pos_ext_i2c [28-30]
+        fprintf( fp, "%lf %lf %lf ", g_lio_state.pos_ext_c2i( 0 ), g_lio_state.pos_ext_c2i( 1 ),
+                 g_lio_state.pos_ext_c2i( 2 ) ); // pos_ext_c2i [28-30]
         fprintf( fp, "%lf %lf %lf %lf ", g_lio_state.cam_intrinsic( 0 ), g_lio_state.cam_intrinsic( 1 ), g_lio_state.cam_intrinsic( 2 ),
                  g_lio_state.cam_intrinsic( 3 ) );     // Camera Intrinsic [31-34]
         fprintf( fp, "%lf ", g_lio_state.td_ext_i2c ); // Camera Intrinsic [35]
@@ -105,6 +105,7 @@ std::string append_space_to_bits( std::string & in_str, int bits )
     }
     return in_str;
 }
+
 void R3LIVE::print_dash_board()
 {
     int mem_used_mb = ( int ) ( Common_tools::get_RSS_Mb() );
@@ -151,6 +152,7 @@ void R3LIVE::print_dash_board()
     ANSI_SCREEN_FLUSH;
 }
 
+// 初始化状态协方差
 void R3LIVE::set_initial_state_cov( StatesGroup &state )
 {
     // Set cov
@@ -196,28 +198,30 @@ void R3LIVE::set_initial_camera_parameter( StatesGroup &state, double *intrinsic
     //     0, 863.4171 / cam_k_scale, 518.3392 / cam_k_scale,
     //     0, 0, 1;
 
-    g_cam_K << intrinsic_data[ 0 ] / cam_k_scale, intrinsic_data[ 1 ], intrinsic_data[ 2 ] / cam_k_scale, intrinsic_data[ 3 ],
-        intrinsic_data[ 4 ] / cam_k_scale, intrinsic_data[ 5 ] / cam_k_scale, intrinsic_data[ 6 ], intrinsic_data[ 7 ], intrinsic_data[ 8 ];
+    g_cam_K << intrinsic_data[0] / cam_k_scale, intrinsic_data[1], intrinsic_data[2] / cam_k_scale, intrinsic_data[3],
+        intrinsic_data[4] / cam_k_scale, intrinsic_data[5] / cam_k_scale, intrinsic_data[6], intrinsic_data[7], intrinsic_data[8];
     g_cam_dist = Eigen::Map< Eigen::Matrix< double, 5, 1 > >( camera_dist_data );
-    state.rot_ext_i2c = Eigen::Map< Eigen::Matrix< double, 3, 3, Eigen::RowMajor > >( imu_camera_ext_R );
-    state.pos_ext_i2c = Eigen::Map< Eigen::Matrix< double, 3, 1 > >( imu_camera_ext_t );
-    // state.pos_ext_i2c.setZero();
+    state.rot_ext_c2i = Eigen::Map< Eigen::Matrix< double, 3, 3, Eigen::RowMajor > >( imu_camera_ext_R );
+    state.pos_ext_c2i = Eigen::Map< Eigen::Matrix< double, 3, 1 > >( imu_camera_ext_t );
+    // state.pos_ext_c2i.setZero();
 
     // Lidar to camera parameters.
     m_mutex_lio_process.lock();
 
-    m_inital_rot_ext_i2c = state.rot_ext_i2c;
-    m_inital_pos_ext_i2c = state.pos_ext_i2c;
-    state.cam_intrinsic( 0 ) = g_cam_K( 0, 0 );
-    state.cam_intrinsic( 1 ) = g_cam_K( 1, 1 );
-    state.cam_intrinsic( 2 ) = g_cam_K( 0, 2 );
-    state.cam_intrinsic( 3 ) = g_cam_K( 1, 2 );
-    set_initial_state_cov( state );
+    m_inital_rot_ext_i2c = state.rot_ext_c2i;
+    m_inital_pos_ext_i2c = state.pos_ext_c2i;
+    state.cam_intrinsic(0) = g_cam_K(0, 0);
+    state.cam_intrinsic(1) = g_cam_K(1, 1);
+    state.cam_intrinsic(2) = g_cam_K(0, 2);
+    state.cam_intrinsic(3) = g_cam_K(1, 2);
+    set_initial_state_cov(state);
     m_mutex_lio_process.unlock();
 }
 
 void R3LIVE::publish_track_img( cv::Mat &img, double frame_cost_time = -1 )
 {
+    // cout << "img rows: " << img.rows << endl << "img cols: " << img.cols << endl;
+
     cv_bridge::CvImage out_msg;
     out_msg.header.stamp = ros::Time::now();               // Same timestamp and tf frame as input image
     out_msg.encoding = sensor_msgs::image_encodings::BGR8; // Or whatever
@@ -261,7 +265,7 @@ std::shared_ptr< std::thread >                     g_thr_process_image;
 
 void R3LIVE::service_process_img_buffer()
 {
-    while ( 1 )
+    while (1)
     {
         // To avoid uncompress so much image buffer, reducing the use of memory.
         if ( m_queue_image_with_pose.size() > 4 )
@@ -314,7 +318,7 @@ void R3LIVE::service_process_img_buffer()
             g_received_img_msg.pop_front();
             mutex_image_callback.unlock();
         }
-        process_image( image_get, img_rec_time );
+        process_image(image_get, img_rec_time);
     }
 }
 
@@ -330,7 +334,7 @@ void R3LIVE::image_comp_callback( const sensor_msgs::CompressedImageConstPtr &ms
     if ( g_flag_if_first_rec_img )
     {
         g_flag_if_first_rec_img = 0;
-        m_thread_pool_ptr->commit_task( &R3LIVE::service_process_img_buffer, this );
+        m_thread_pool_ptr->commit_task(&R3LIVE::service_process_img_buffer, this);
     }
     return;
 }
@@ -344,36 +348,39 @@ void R3LIVE::image_callback( const sensor_msgs::ImageConstPtr &msg )
         return; // Avoid subscribe the same image twice.
     }
     sub_image_typed = 1;
-
-    if ( g_flag_if_first_rec_img )
+    // 如果是第一张图片
+    if (g_flag_if_first_rec_img)
     {
         g_flag_if_first_rec_img = 0;
-        m_thread_pool_ptr->commit_task( &R3LIVE::service_process_img_buffer, this );
+        m_thread_pool_ptr->commit_task(&R3LIVE::service_process_img_buffer, this);
     }
 
-    cv::Mat temp_img = cv_bridge::toCvCopy( msg, sensor_msgs::image_encodings::BGR8 )->image.clone();
+    cv::Mat temp_img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image.clone();
     process_image( temp_img, msg->header.stamp.toSec() );
 }
 
 double last_accept_time = 0;
 int    buffer_max_frame = 0;
 int    total_frame_count = 0;
-void   R3LIVE::process_image( cv::Mat &temp_img, double msg_time )
+
+
+
+void R3LIVE::process_image(cv::Mat &temp_img, double msg_time)
 {
     cv::Mat img_get;
-    if ( temp_img.rows == 0 )
+    if (temp_img.rows == 0)
     {
         cout << "Process image error, image rows =0 " << endl;
         return;
     }
 
-    if ( msg_time < last_accept_time )
+    if (msg_time < last_accept_time)
     {
         cout << "Error, image time revert!!" << endl;
         return;
     }
 
-    if ( ( msg_time - last_accept_time ) < ( 1.0 / m_control_image_freq ) * 0.9 )
+    if ( (msg_time - last_accept_time) < (1.0 / m_control_image_freq) * 0.9 )
     {
         return;
     }
@@ -383,6 +390,7 @@ void   R3LIVE::process_image( cv::Mat &temp_img, double msg_time )
     {
         m_camera_start_ros_tim = msg_time;
         m_vio_scale_factor = m_vio_image_width * m_image_downsample_ratio / temp_img.cols; // 320 * 24
+        
         // load_vio_parameters();
         set_initial_camera_parameter( g_lio_state, m_camera_intrinsic.data(), m_camera_dist_coeffs.data(), m_camera_ext_R.data(),
                                       m_camera_ext_t.data(), m_vio_scale_factor );
@@ -390,7 +398,9 @@ void   R3LIVE::process_image( cv::Mat &temp_img, double msg_time )
         cv::eigen2cv( g_cam_dist, dist_coeffs );
         initUndistortRectifyMap( intrinsic, dist_coeffs, cv::Mat(), intrinsic, cv::Size( m_vio_image_width / m_vio_scale_factor, m_vio_image_heigh / m_vio_scale_factor ),
                                  CV_16SC2, m_ud_map1, m_ud_map2 );
+        // 分多个topic发布RGB point cloud
         m_thread_pool_ptr->commit_task( &R3LIVE::service_pub_rgb_maps, this);
+        // vio主函数
         m_thread_pool_ptr->commit_task( &R3LIVE::service_VIO_update, this);
         m_mvs_recorder.init( g_cam_K, m_vio_image_width / m_vio_scale_factor, &m_map_rgb_pts );
         m_mvs_recorder.set_working_dir( m_map_output_dir );
@@ -398,13 +408,13 @@ void   R3LIVE::process_image( cv::Mat &temp_img, double msg_time )
 
     if ( m_image_downsample_ratio != 1.0 )
     {
-        cv::resize( temp_img, img_get, cv::Size( m_vio_image_width / m_vio_scale_factor, m_vio_image_heigh / m_vio_scale_factor ) );
+        cv::resize( temp_img, img_get, cv::Size(m_vio_image_width / m_vio_scale_factor, m_vio_image_heigh / m_vio_scale_factor) );
     }
     else
     {
         img_get = temp_img; // clone ?
     }
-    std::shared_ptr< Image_frame > img_pose = std::make_shared< Image_frame >( g_cam_K );
+    std::shared_ptr<Image_frame> img_pose = std::make_shared<Image_frame>(g_cam_K);
     if ( m_if_pub_raw_img )
     {
         img_pose->m_raw_img = img_get;
@@ -415,7 +425,7 @@ void   R3LIVE::process_image( cv::Mat &temp_img, double msg_time )
     img_pose->init_cubic_interpolation();
     img_pose->image_equalize();
     m_camera_data_mutex.lock();
-    m_queue_image_with_pose.push_back( img_pose );
+    m_queue_image_with_pose.push_back(img_pose);
     m_camera_data_mutex.unlock();
     total_frame_count++;
 
@@ -427,9 +437,9 @@ void   R3LIVE::process_image( cv::Mat &temp_img, double msg_time )
     // cout << "Image queue size = " << m_queue_image_with_pose.size() << endl;
 }
 
+// 从r3live_config.yaml中load参数
 void R3LIVE::load_vio_parameters()
 {
-
     std::vector< double > camera_intrinsic_data, camera_dist_coeffs_data, camera_ext_R_data, camera_ext_t_data;
     m_ros_node_handle.getParam( "r3live_vio/image_width", m_vio_image_width );
     m_ros_node_handle.getParam( "r3live_vio/image_height", m_vio_image_heigh );
@@ -451,8 +461,8 @@ void R3LIVE::load_vio_parameters()
         std::this_thread::sleep_for( std::chrono::seconds( 3000000 ) );
     }
 
-    m_camera_intrinsic = Eigen::Map< Eigen::Matrix< double, 3, 3, Eigen::RowMajor > >( camera_intrinsic_data.data() );
-    m_camera_dist_coeffs = Eigen::Map< Eigen::Matrix< double, 5, 1 > >( camera_dist_coeffs_data.data() );
+    m_camera_intrinsic = Eigen::Map< Eigen::Matrix<double, 3, 3, Eigen::RowMajor> >( camera_intrinsic_data.data() );
+    m_camera_dist_coeffs = Eigen::Map< Eigen::Matrix<double, 5, 1> >( camera_dist_coeffs_data.data() );
     m_camera_ext_R = Eigen::Map< Eigen::Matrix< double, 3, 3, Eigen::RowMajor > >( camera_ext_R_data.data() );
     m_camera_ext_t = Eigen::Map< Eigen::Matrix< double, 3, 1 > >( camera_ext_t_data.data() );
 
@@ -469,8 +479,8 @@ void R3LIVE::set_image_pose( std::shared_ptr< Image_frame > &image_pose, const S
 {
     mat_3_3 rot_mat = state.rot_end;
     vec_3   t_vec = state.pos_end;
-    vec_3   pose_t = rot_mat * state.pos_ext_i2c + t_vec;
-    mat_3_3 R_w2c = rot_mat * state.rot_ext_i2c;
+    vec_3   pose_t = rot_mat * state.pos_ext_c2i + t_vec;
+    mat_3_3 R_w2c = rot_mat * state.rot_ext_c2i;
 
     image_pose->set_pose( eigen_q( R_w2c ), pose_t );
     image_pose->fx = state.cam_intrinsic( 0 );
@@ -596,14 +606,14 @@ double get_huber_loss_scale( double reprojection_error, double outlier_threshold
     }
     else
     {
-        scale = ( 2 * sqrt( reprojection_error ) / sqrt( outlier_threshold ) - 1.0 ) / reprojection_error;
+        scale = ( 2 * sqrt(reprojection_error) / sqrt(outlier_threshold) - 1.0 ) / reprojection_error;
     }
     return scale;
 }
 
-// ANCHOR - VIO_esikf
+// ANCHOR - VIO_esikf 对应R3LIVE论文Section V-A
 const int minimum_iteration_pts = 10;
-bool      R3LIVE::vio_esikf( StatesGroup &state_in, Rgbmap_tracker &op_track )
+bool R3LIVE::vio_esikf( StatesGroup &state_in, Rgbmap_tracker &op_track )
 {
     Common_tools::Timer tim;
     tim.tic();
@@ -616,8 +626,8 @@ bool      R3LIVE::vio_esikf( StatesGroup &state_in, Rgbmap_tracker &op_track )
 
     if ( !m_if_estimate_i2c_extrinsic )
     {
-        state_iter.pos_ext_i2c = m_inital_pos_ext_i2c;
-        state_iter.rot_ext_i2c = m_inital_rot_ext_i2c;
+        state_iter.pos_ext_c2i = m_inital_pos_ext_i2c;
+        state_iter.rot_ext_c2i = m_inital_rot_ext_i2c;
     }
 
     Eigen::Matrix< double, -1, -1 >                       H_mat;
@@ -632,14 +642,17 @@ bool      R3LIVE::vio_esikf( StatesGroup &state_in, Rgbmap_tracker &op_track )
     I_STATE_spa = I_STATE.sparseView();
     double fx, fy, cx, cy, time_td;
 
-    int                   total_pt_size = op_track.m_map_rgb_pts_in_current_frame_pos.size();
+    // 视觉特征点个数
+    int total_pt_size = op_track.m_map_rgb_pts_in_current_frame_pos.size();
     std::vector< double > last_reprojection_error_vec( total_pt_size ), current_reprojection_error_vec( total_pt_size );
 
+    // 视觉特征点个数不够
     if ( total_pt_size < minimum_iteration_pts )
     {
         state_in = state_iter;
         return false;
     }
+
     H_mat.resize( total_pt_size * 2, DIM_OF_STATES );
     meas_vec.resize( total_pt_size * 2, 1 );
     double last_repro_err = 3e8;
@@ -654,18 +667,18 @@ bool      R3LIVE::vio_esikf( StatesGroup &state_in, Rgbmap_tracker &op_track )
         // cout << "========== Iter " << iter_count << " =========" << endl;
         mat_3_3 R_imu = state_iter.rot_end;
         vec_3   t_imu = state_iter.pos_end;
-        vec_3   t_c2w = R_imu * state_iter.pos_ext_i2c + t_imu;
-        mat_3_3 R_c2w = R_imu * state_iter.rot_ext_i2c; // world to camera frame
+        vec_3   t_c2w = R_imu * state_iter.pos_ext_c2i + t_imu;
+        mat_3_3 R_c2w = R_imu * state_iter.rot_ext_c2i; // camera to world frame
 
-        fx = state_iter.cam_intrinsic( 0 );
-        fy = state_iter.cam_intrinsic( 1 );
-        cx = state_iter.cam_intrinsic( 2 );
-        cy = state_iter.cam_intrinsic( 3 );
+        fx = state_iter.cam_intrinsic(0);
+        fy = state_iter.cam_intrinsic(1);
+        cx = state_iter.cam_intrinsic(2);
+        cy = state_iter.cam_intrinsic(3);
         time_td = state_iter.td_ext_i2c_delta;
 
         vec_3   t_w2c = -R_c2w.transpose() * t_c2w;
         mat_3_3 R_w2c = R_c2w.transpose();
-        int     pt_idx = -1;
+        int pt_idx = -1;
         acc_reprojection_error = 0;
         vec_3               pt_3d_w, pt_3d_cam;
         vec_2               pt_img_measure, pt_img_proj, pt_img_vel;
@@ -677,11 +690,16 @@ bool      R3LIVE::vio_esikf( StatesGroup &state_in, Rgbmap_tracker &op_track )
         avail_pt_count = 0;
         for ( auto it = op_track.m_map_rgb_pts_in_last_frame_pos.begin(); it != op_track.m_map_rgb_pts_in_last_frame_pos.end(); it++ )
         {
+            // 特征点在世界系下的坐标
             pt_3d_w = ( ( RGB_pts * ) it->first )->get_pos();
             pt_img_vel = ( ( RGB_pts * ) it->first )->m_img_vel;
+            // 特征点的像素坐标
             pt_img_measure = vec_2( it->second.x, it->second.y );
+            // 特征点在相机系下的坐标
             pt_3d_cam = R_w2c * pt_3d_w + t_w2c;
+            // R3LIVE论文公式（5）
             pt_img_proj = vec_2( fx * pt_3d_cam( 0 ) / pt_3d_cam( 2 ) + cx, fy * pt_3d_cam( 1 ) / pt_3d_cam( 2 ) + cy ) + time_td * pt_img_vel;
+            // R3LIVE论文公式（4）
             double repro_err = ( pt_img_proj - pt_img_measure ).norm();
             double huber_loss_scale = get_huber_loss_scale( repro_err );
             pt_idx++;
@@ -701,28 +719,28 @@ bool      R3LIVE::vio_esikf( StatesGroup &state_in, Rgbmap_tracker &op_track )
             mat_pre << fx / pt_3d_cam( 2 ), 0, -fx * pt_3d_cam( 0 ) / pt_3d_cam( 2 ), 0, fy / pt_3d_cam( 2 ), -fy * pt_3d_cam( 1 ) / pt_3d_cam( 2 );
 
             pt_hat = Sophus::SO3d::hat( ( R_imu.transpose() * ( pt_3d_w - t_imu ) ) );
-            mat_A = state_iter.rot_ext_i2c.transpose() * pt_hat;
-            mat_B = -state_iter.rot_ext_i2c.transpose() * ( R_imu.transpose() );
+            mat_A = state_iter.rot_ext_c2i.transpose() * pt_hat;
+            mat_B = -state_iter.rot_ext_c2i.transpose() * ( R_imu.transpose() );
             mat_C = Sophus::SO3d::hat( pt_3d_cam );
-            mat_D = -state_iter.rot_ext_i2c.transpose();
+            mat_D = -state_iter.rot_ext_c2i.transpose();
             meas_vec.block( pt_idx * 2, 0, 2, 1 ) = ( pt_img_proj - pt_img_measure ) * huber_loss_scale / img_res_scale;
 
             H_mat.block( pt_idx * 2, 0, 2, 3 ) = mat_pre * mat_A * huber_loss_scale;
             H_mat.block( pt_idx * 2, 3, 2, 3 ) = mat_pre * mat_B * huber_loss_scale;
-            if ( DIM_OF_STATES > 24 )
+            if (DIM_OF_STATES > 24)
             {
                 // Estimate time td.
                 H_mat.block( pt_idx * 2, 24, 2, 1 ) = pt_img_vel * huber_loss_scale;
                 // H_mat(pt_idx * 2, 24) = pt_img_vel(0) * huber_loss_scale;
                 // H_mat(pt_idx * 2 + 1, 24) = pt_img_vel(1) * huber_loss_scale;
             }
-            if ( m_if_estimate_i2c_extrinsic )
+            if (m_if_estimate_i2c_extrinsic)
             {
                 H_mat.block( pt_idx * 2, 18, 2, 3 ) = mat_pre * mat_C * huber_loss_scale;
                 H_mat.block( pt_idx * 2, 21, 2, 3 ) = mat_pre * mat_D * huber_loss_scale;
             }
 
-            if ( m_if_estimate_intrinsic )
+            if (m_if_estimate_intrinsic)
             {
                 H_mat( pt_idx * 2, 25 ) = pt_3d_cam( 0 ) / pt_3d_cam( 2 ) * huber_loss_scale;
                 H_mat( pt_idx * 2 + 1, 26 ) = pt_3d_cam( 1 ) / pt_3d_cam( 2 ) * huber_loss_scale;
@@ -744,9 +762,11 @@ bool      R3LIVE::vio_esikf( StatesGroup &state_in, Rgbmap_tracker &op_track )
         vec_spa = ( state_iter - state_in ).sparseView();
         H_T_H_spa = Hsub_T_temp_mat * H_mat_spa;
         // Notice that we have combine some matrix using () in order to boost the matrix multiplication.
+        // R3LIVE论文公式（17）
         Eigen::SparseMatrix< double > temp_inv_mat =
             ( ( H_T_H_spa.toDense() + eigen_mat< -1, -1 >( state_in.cov * m_cam_measurement_weight ).inverse() ).inverse() ).sparseView();
         KH_spa = temp_inv_mat * ( Hsub_T_temp_mat * H_mat_spa );
+        // R3LIVE论文公式（18）
         solution = ( temp_inv_mat * ( Hsub_T_temp_mat * ( ( -1 * meas_vec.sparseView() ) ) ) - ( I_STATE_spa - KH_spa ) * vec_spa ).toDense();
 
         state_iter = state_iter + solution;
@@ -769,6 +789,7 @@ bool      R3LIVE::vio_esikf( StatesGroup &state_in, Rgbmap_tracker &op_track )
     return true;
 }
 
+// 对应R3LIVE论文Section V-B
 bool R3LIVE::vio_photometric( StatesGroup &state_in, Rgbmap_tracker &op_track, std::shared_ptr< Image_frame > &image )
 {
     Common_tools::Timer tim;
@@ -780,8 +801,8 @@ bool R3LIVE::vio_photometric( StatesGroup &state_in, Rgbmap_tracker &op_track, s
     }
     if ( !m_if_estimate_i2c_extrinsic ) // When disable the online extrinsic calibration.
     {
-        state_iter.pos_ext_i2c = m_inital_pos_ext_i2c;
-        state_iter.rot_ext_i2c = m_inital_rot_ext_i2c;
+        state_iter.pos_ext_c2i = m_inital_pos_ext_i2c;
+        state_iter.rot_ext_c2i = m_inital_rot_ext_i2c;
     }
     Eigen::Matrix< double, -1, -1 >                       H_mat, R_mat_inv;
     Eigen::Matrix< double, -1, 1 >                        meas_vec;
@@ -817,13 +838,13 @@ bool R3LIVE::vio_photometric( StatesGroup &state_in, Rgbmap_tracker &op_track, s
     {
         mat_3_3 R_imu = state_iter.rot_end;
         vec_3   t_imu = state_iter.pos_end;
-        vec_3   t_c2w = R_imu * state_iter.pos_ext_i2c + t_imu;
-        mat_3_3 R_c2w = R_imu * state_iter.rot_ext_i2c; // world to camera frame
+        vec_3   t_c2w = R_imu * state_iter.pos_ext_c2i + t_imu;
+        mat_3_3 R_c2w = R_imu * state_iter.rot_ext_c2i; // world to camera frame
 
-        fx = state_iter.cam_intrinsic( 0 );
-        fy = state_iter.cam_intrinsic( 1 );
-        cx = state_iter.cam_intrinsic( 2 );
-        cy = state_iter.cam_intrinsic( 3 );
+        fx = state_iter.cam_intrinsic(0);
+        fy = state_iter.cam_intrinsic(1);
+        cx = state_iter.cam_intrinsic(2);
+        cy = state_iter.cam_intrinsic(3);
         time_td = state_iter.td_ext_i2c_delta;
 
         vec_3   t_w2c = -R_c2w.transpose() * t_c2w;
@@ -854,8 +875,10 @@ bool R3LIVE::vio_photometric( StatesGroup &state_in, Rgbmap_tracker &op_track, s
             pt_img_vel = ( ( RGB_pts * ) it->first )->m_img_vel;
             pt_img_measure = vec_2( it->second.x, it->second.y );
             pt_3d_cam = R_w2c * pt_3d_w + t_w2c;
-            pt_img_proj = vec_2( fx * pt_3d_cam( 0 ) / pt_3d_cam( 2 ) + cx, fy * pt_3d_cam( 1 ) / pt_3d_cam( 2 ) + cy ) + time_td * pt_img_vel;
+            // R3LIVE论文公式（5）
+            pt_img_proj = vec_2( fx * pt_3d_cam(0) / pt_3d_cam(2) + cx, fy * pt_3d_cam(1) / pt_3d_cam(2) + cy ) + time_td * pt_img_vel;
 
+            // c_s
             vec_3   pt_rgb = ( ( RGB_pts * ) it->first )->get_rgb();
             mat_3_3 pt_rgb_info = mat_3_3::Zero();
             mat_3_3 pt_rgb_cov = ( ( RGB_pts * ) it->first )->get_rgb_cov();
@@ -866,7 +889,9 @@ bool R3LIVE::vio_photometric( StatesGroup &state_in, Rgbmap_tracker &op_track, s
                 // R_mat_inv( pt_idx * err_size + i, pt_idx * err_size + i ) =  1.0;
             }
             vec_3  obs_rgb_dx, obs_rgb_dy;
+            // gama_s
             vec_3  obs_rgb = image->get_rgb( pt_img_proj( 0 ), pt_img_proj( 1 ), 0, &obs_rgb_dx, &obs_rgb_dy );
+            // R3LIVE论文公式（19）
             vec_3  photometric_err_vec = ( obs_rgb - pt_rgb );
             double huber_loss_scale = get_huber_loss_scale( photometric_err_vec.norm() );
             photometric_err_vec *= huber_loss_scale;
@@ -877,19 +902,19 @@ bool R3LIVE::vio_photometric( StatesGroup &state_in, Rgbmap_tracker &op_track, s
             last_reprojection_error_vec[ pt_idx ] = photometric_err;
 
             avail_pt_count++;
-            mat_pre << fx / pt_3d_cam( 2 ), 0, -fx * pt_3d_cam( 0 ) / pt_3d_cam( 2 ), 0, fy / pt_3d_cam( 2 ), -fy * pt_3d_cam( 1 ) / pt_3d_cam( 2 );
+            mat_pre << fx / pt_3d_cam(2), 0, -fx * pt_3d_cam(0) / pt_3d_cam(2), 0, fy / pt_3d_cam(2), -fy * pt_3d_cam(1) / pt_3d_cam(2);
             mat_d_pho_d_img = mat_photometric * mat_pre;
 
             pt_hat = Sophus::SO3d::hat( ( R_imu.transpose() * ( pt_3d_w - t_imu ) ) );
-            mat_A = state_iter.rot_ext_i2c.transpose() * pt_hat;
-            mat_B = -state_iter.rot_ext_i2c.transpose() * ( R_imu.transpose() );
+            mat_A = state_iter.rot_ext_c2i.transpose() * pt_hat;
+            mat_B = -state_iter.rot_ext_c2i.transpose() * ( R_imu.transpose() );
             mat_C = Sophus::SO3d::hat( pt_3d_cam );
-            mat_D = -state_iter.rot_ext_i2c.transpose();
+            mat_D = -state_iter.rot_ext_c2i.transpose();
             meas_vec.block( pt_idx * 3, 0, 3, 1 ) = photometric_err_vec ;
 
             H_mat.block( pt_idx * 3, 0, 3, 3 ) = mat_d_pho_d_img * mat_A * huber_loss_scale;
             H_mat.block( pt_idx * 3, 3, 3, 3 ) = mat_d_pho_d_img * mat_B * huber_loss_scale;
-            if ( 1 )
+            if (1)
             {
                 if ( m_if_estimate_i2c_extrinsic )
                 {
@@ -1075,20 +1100,22 @@ void R3LIVE::service_VIO_update()
 {
     // Init cv windows for debug
     op_track.set_intrinsic( g_cam_K, g_cam_dist * 0, cv::Size( m_vio_image_width / m_vio_scale_factor, m_vio_image_heigh / m_vio_scale_factor ) );
+    // 最大跟踪点数
     op_track.m_maximum_vio_tracked_pts = m_maximum_vio_tracked_pts;
     m_map_rgb_pts.m_minimum_depth_for_projection = m_tracker_minimum_depth;
     m_map_rgb_pts.m_maximum_depth_for_projection = m_tracker_maximum_depth;
     cv::imshow( "Control panel", generate_control_panel_img().clone() );
     Common_tools::Timer tim;
-    cv::Mat             img_get;
-    while ( ros::ok() )
+    cv::Mat img_get;
+    while (ros::ok())
     {
         cv_keyboard_callback();
+        // 如果没有lidar数据
         while ( g_camera_lidar_queue.m_if_have_lidar_data == 0 )
         {
             ros::spinOnce();
             std::this_thread::sleep_for( std::chrono::milliseconds( THREAD_SLEEP_TIM ) );
-            std::this_thread::yield();
+            std::this_thread::yield();  // 其他线程有需要时让出CPU
             continue;
         }
 
@@ -1099,29 +1126,34 @@ void R3LIVE::service_VIO_update()
             std::this_thread::yield();
             continue;
         }
+
         m_camera_data_mutex.lock();
         while ( m_queue_image_with_pose.size() > m_maximum_image_buffer )
         {
             cout << ANSI_COLOR_BLUE_BOLD << "=== Pop image! current queue size = " << m_queue_image_with_pose.size() << " ===" << ANSI_COLOR_RESET
                  << endl;
-            op_track.track_img( m_queue_image_with_pose.front(), -20 );
+            // 光流跟踪，3D地图点投影后，像素距离大于-20（负值不做剔除）认为无效
+            op_track.track_img( m_queue_image_with_pose.front(), -20 ); 
             m_queue_image_with_pose.pop_front();
         }
 
         std::shared_ptr< Image_frame > img_pose = m_queue_image_with_pose.front();
-        double                             message_time = img_pose->m_timestamp;
+        double message_time = img_pose->m_timestamp;
         m_queue_image_with_pose.pop_front();
         m_camera_data_mutex.unlock();
         g_camera_lidar_queue.m_last_visual_time = img_pose->m_timestamp + g_lio_state.td_ext_i2c;
-
+        // 记录frame的索引
         img_pose->set_frame_idx( g_camera_frame_idx );
         tim.tic( "Frame" );
 
+
+        // 第一帧图像
         if ( g_camera_frame_idx == 0 )
         {
             std::vector< cv::Point2f >                pts_2d_vec;
             std::vector< std::shared_ptr< RGB_pts > > rgb_pts_vec;
             // while ( ( m_map_rgb_pts.is_busy() ) || ( ( m_map_rgb_pts.m_rgb_pts_vec.size() <= 100 ) ) )
+            // 地图点太少，等待数据累积
             while ( ( ( m_map_rgb_pts.m_rgb_pts_vec.size() <= 100 ) ) )
             {
                 ros::spinOnce();
@@ -1162,8 +1194,8 @@ void R3LIVE::service_VIO_update()
         tim.tic( "Ransac" );
         set_image_pose( img_pose, state_out );
 
-        // ANCHOR -  remove point using PnP.
-        if ( op_track.remove_outlier_using_ransac_pnp( img_pose ) == 0 )
+        // ANCHOR -  remove point using PnP. 
+        if ( op_track.remove_outlier_using_ransac_pnp(img_pose) == 0 )
         {
             cout << ANSI_COLOR_RED_BOLD << "****** Remove_outlier_using_ransac_pnp error*****" << ANSI_COLOR_RESET << endl;
         }
@@ -1171,20 +1203,25 @@ void R3LIVE::service_VIO_update()
         tim.tic( "Vio_f2f" );
         bool res_esikf = true, res_photometric = true;
         wait_render_thread_finish();
+        // R3LIVE论文Section V-A
         res_esikf = vio_esikf( state_out, op_track );
+
         g_cost_time_logger.record( tim, "Vio_f2f" );
         tim.tic( "Vio_f2m" );
         res_photometric = vio_photometric( state_out, op_track, img_pose );
         g_cost_time_logger.record( tim, "Vio_f2m" );
         g_lio_state = state_out;
+
+        
         print_dash_board();
         set_image_pose( img_pose, state_out );
 
-        if ( 1 )
+        // 给点云着色，对应R3LIVE论文Section V-C
+        if (1)
         {
             tim.tic( "Render" );
             // m_map_rgb_pts.render_pts_in_voxels(img_pose, m_last_added_rgb_pts_vec);
-            if ( 1 ) // Using multiple threads for rendering
+            if (1) // Using multiple threads for rendering
             {
                 m_map_rgb_pts.m_if_get_all_pts_in_boxes_using_mp = 0;
                 // m_map_rgb_pts.render_pts_in_voxels_mp(img_pose, &m_map_rgb_pts.m_rgb_pts_in_recent_visited_voxels,
@@ -1212,6 +1249,7 @@ void R3LIVE::service_VIO_update()
         // ANCHOR - render point cloud
         dump_lio_state_to_log( m_lio_state_fp );
         m_mutex_lio_process.unlock();
+        
         // cout << "Solve image pose cost " << tim.toc("Solve_pose") << endl;
         m_map_rgb_pts.update_pose_for_projection( img_pose, -0.4 );
         op_track.update_and_append_track_pts( img_pose, m_map_rgb_pts, m_track_windows_size / m_vio_scale_factor, 1000000 );
@@ -1227,6 +1265,8 @@ void R3LIVE::service_VIO_update()
         tim.tic( "Pub" );
         double display_cost_time = std::accumulate( frame_cost_time_vec.begin(), frame_cost_time_vec.end(), 0.0 ) / frame_cost_time_vec.size();
         g_vio_frame_cost_time = display_cost_time;
+        
+        
         // publish_render_pts( m_pub_render_rgb_pts, m_map_rgb_pts );
         publish_camera_odom( img_pose, message_time );
         // publish_track_img( op_track.m_debug_track_img, display_cost_time );

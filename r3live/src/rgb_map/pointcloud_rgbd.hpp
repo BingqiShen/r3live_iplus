@@ -165,7 +165,7 @@ struct Global_map
     std::shared_ptr< std::mutex >                                m_mutex_rgb_pts_in_recent_hitted_boxes;
     std::shared_ptr< std::mutex >                                m_mutex_m_box_recent_hitted;
     std::shared_ptr< std::mutex >                                m_mutex_pts_last_visited;
-    Image_frame                                              m_img_for_projection;
+    Image_frame                                                  m_img_for_projection;
     double                                                       m_recent_visited_voxel_activated_time = 0.0;
     bool                                                         m_in_appending_pts = 0;
     int                                                          m_updated_frame_index = 0;

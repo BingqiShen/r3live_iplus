@@ -408,13 +408,16 @@ static inline double thread_render_pts_in_voxel(const int & pt_start, const int 
     double pt_cam_norm;
     Common_tools::Timer tim;
     tim.tic();
+    // pt_start到pt_end个voxel
     for (int voxel_idx = pt_start; voxel_idx < pt_end; voxel_idx++)
     {
         // continue;
         RGB_voxel_ptr voxel_ptr = (*voxels_for_render)[ voxel_idx ];
+        // 每个voxel下有m_pts_in_grid.size(）个特征点，voxel_ptr应该是激光点云下的voxel
         for ( int pt_idx = 0; pt_idx < voxel_ptr->m_pts_in_grid.size(); pt_idx++ )
         {
             pt_w = voxel_ptr->m_pts_in_grid[pt_idx]->get_pos();
+            // 判断激光点云坐标在不在相机图像中？
             if ( img_ptr->project_3d_point_in_this_img( pt_w, u, v, nullptr, 1.0 ) == false )
             {
                 continue;
@@ -434,6 +437,7 @@ static inline double thread_render_pts_in_voxel(const int & pt_start, const int 
     return cost_time;
 }
 
+// 给点云着色，对应R3LIVE论文Section V-C
 std::vector<RGB_voxel_ptr>  g_voxel_for_render;
 void render_pts_in_voxels_mp(std::shared_ptr<Image_frame> &img_ptr, std::unordered_set<RGB_voxel_ptr> * _voxels_for_render,  const double & obs_time)
 {
@@ -447,7 +451,7 @@ void render_pts_in_voxels_mp(std::shared_ptr<Image_frame> &img_ptr, std::unorder
     tim.tic("Render_mp");
     int numbers_of_voxels = g_voxel_for_render.size();
     g_cost_time_logger.record("Pts_num", numbers_of_voxels);
-    render_pts_count= 0 ;
+    render_pts_count= 0;
     if(USING_OPENCV_TBB)
     {
         cv::parallel_for_(cv::Range(0, numbers_of_voxels), [&](const cv::Range &r)
@@ -628,7 +632,7 @@ void Global_map::save_to_pcd(std::string dir_name, std::string _file_name, int s
             cout << ANSI_DELETE_CURRENT_LINE << "Saving offline map " << (int)( (pt_size- 1 -i ) * 100.0 / (pt_size-1) ) << " % ...";
             fflush(stdout);
         }
-
+        // save_pts_with_views = 5，如果被观查到的次数小于5次，就不加入pcd图中
         if (m_rgb_pts_vec[i]->m_N_rgb < save_pts_with_views)
         {
             continue;

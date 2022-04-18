@@ -840,7 +840,8 @@ float computePlaneSphereAngle( const delaunay_t &Tr, const facet_t &facet )
 // and the surface is such extracted.
 
 // Input data: mesh, pointcloud, camera positions, pts_in camera_ray
-bool ReconstructMesh( float distInsert, bool bUseFreeSpaceSupport, unsigned nItersFixNonManifold, float kSigma, float kQual, Mesh &m_mesh,
+bool ReconstructMesh( float distInsert, bool bUseFreeSpaceSupport, unsigned nItersFixNonManifold, 
+                      float kSigma, float kQual, Mesh &m_mesh,
                       ImageArr &m_images, PointCloud &m_pointcloud )
 {
     float kb = 4.f;

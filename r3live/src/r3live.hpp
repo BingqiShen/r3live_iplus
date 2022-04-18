@@ -121,9 +121,9 @@ extern double g_vio_frame_cost_time;
 extern double g_lio_frame_cost_time;
 void dump_lio_state_to_log(FILE *fp);
 
-
 extern Common_tools::Cost_time_logger g_cost_time_logger;
 extern std::shared_ptr<Common_tools::ThreadPool> m_thread_pool_ptr;
+
 class R3LIVE
 {
 public:
@@ -135,9 +135,9 @@ public:
     FILE * m_lio_costtime_fp;
     double m_maximum_pt_kdtree_dis = 1.0;
     double m_maximum_res_dis = 1.0;
-    double m_planar_check_dis = 0.05;
-    double m_lidar_imu_time_delay = 0;
-    double m_long_rang_pt_dis = 500.0;
+    double m_planar_check_dis = 0.05;      // 点到平面距离阈值
+    double m_lidar_imu_time_delay = 0;     // lidar imu时间延迟
+    double m_long_rang_pt_dis = 500.0;     // 激光点有效的最远距离
     bool m_if_publish_feature_map = false;
     int iterCount = 0;
     int NUM_MAX_ITERATIONS = 0;
@@ -212,6 +212,7 @@ public:
     int effect_feat_num = 0, frame_num = 0;
     double filter_size_corner_min, m_voxel_downsample_size_surf, filter_size_map_min, fov_deg, deltaT, deltaR, aver_time_consu = 0, frame_first_pt_time = 0;
     double m_voxel_downsample_size_axis_z;
+
     geometry_msgs::PoseStamped msg_body_pose;
     nav_msgs::Odometry odomAftMapped;
     PointType pointOri, pointSel, coeff;
@@ -239,8 +240,8 @@ public:
     double m_vio_scale_factor = 1.0;
     cv::Mat m_ud_map1, m_ud_map2;
 
-    int                          g_camera_frame_idx = 0;
-    int                          g_LiDAR_frame_index = 0;
+    int g_camera_frame_idx = 0;
+    int g_LiDAR_frame_index = 0;
     std::mutex g_mutex_render;
     std::shared_ptr<Image_frame> g_last_image_pose_for_render = nullptr;
     std::list<double> frame_cost_time_vec;
@@ -312,6 +313,7 @@ public:
 
     bool sync_packages(MeasureGroup &meas);
     
+    // 构造函数
     R3LIVE()
     {
         pubLaserCloudFullRes = m_ros_node_handle.advertise<sensor_msgs::PointCloud2>("/cloud_registered", 100);
@@ -328,6 +330,7 @@ public:
         pub_path_cam = m_ros_node_handle.advertise<nav_msgs::Path>("/camera_path", 10);
         std::string LiDAR_pointcloud_topic, IMU_topic, IMAGE_topic, IMAGE_topic_compressed;
 
+        // 从launch文件里获取，可直接在launch文件里修改
         get_ros_parameter<std::string>(m_ros_node_handle, "/LiDAR_pointcloud_topic", LiDAR_pointcloud_topic, std::string("/laser_cloud_flat") );
         get_ros_parameter<std::string>(m_ros_node_handle, "/IMU_topic", IMU_topic, std::string("/livox/imu") );
         get_ros_parameter<std::string>(m_ros_node_handle, "/Image_topic", IMAGE_topic, std::string("/camera/image_color") );
@@ -345,18 +348,21 @@ public:
         }
 
         sub_imu = m_ros_node_handle.subscribe(IMU_topic.c_str(), 2000000, &R3LIVE::imu_cbk, this, ros::TransportHints().tcpNoDelay());
-        sub_pcl = m_ros_node_handle.subscribe(LiDAR_pointcloud_topic.c_str(), 2000000, &R3LIVE::feat_points_cbk, this, ros::TransportHints().tcpNoDelay());
+        // sub_pcl = m_ros_node_handle.subscribe(LiDAR_pointcloud_topic.c_str(), 2000000, &R3LIVE::feat_points_cbk, this, ros::TransportHints().tcpNoDelay());
+        sub_pcl = m_ros_node_handle.subscribe("/laser_cloud", 2000000, &R3LIVE::feat_points_cbk, this, ros::TransportHints().tcpNoDelay());
         sub_img = m_ros_node_handle.subscribe(IMAGE_topic.c_str(), 1000000, &R3LIVE::image_callback, this, ros::TransportHints().tcpNoDelay());
         sub_img_comp = m_ros_node_handle.subscribe(IMAGE_topic_compressed.c_str(), 1000000, &R3LIVE::image_comp_callback, this, ros::TransportHints().tcpNoDelay());
 
         m_ros_node_handle.getParam("/initial_pose", m_initial_pose);
         m_pub_rgb_render_pointcloud_ptr_vec.resize(1e3);
         // ANCHOR - ROS parameters
-        if ( 1 )
+        // 也是从launch文件里获取的，可以在r3live_config.yaml文件里修改
+        if(1)
         {
             scope_color( ANSI_COLOR_RED );
             get_ros_parameter( m_ros_node_handle, "r3live_common/map_output_dir", m_map_output_dir,
                                Common_tools::get_home_folder().append( "/r3live_output" ) );
+            m_map_output_dir = "/media/jz/5b3f1040-e4bd-4eee-8340-b1e1fbc574ba/home/jz/Lidar_Camera/r3live_bag/r3live_output";
             get_ros_parameter( m_ros_node_handle, "r3live_common/append_global_map_point_step", m_append_global_map_point_step, 4 );
             get_ros_parameter( m_ros_node_handle, "r3live_common/recent_visited_voxel_activated_time", m_recent_visited_voxel_activated_time, 0.0 );
             get_ros_parameter( m_ros_node_handle, "r3live_common/maximum_image_buffer", m_maximum_image_buffer, 20000 );
@@ -366,14 +372,13 @@ public:
             get_ros_parameter( m_ros_node_handle, "r3live_common/minimum_pts_size", m_minumum_rgb_pts_size, 0.05 );
             get_ros_parameter( m_ros_node_handle, "r3live_common/record_offline_map", m_if_record_mvs, 0 );
             get_ros_parameter( m_ros_node_handle, "r3live_common/pub_pt_minimum_views", m_pub_pt_minimum_views, 5 );
-
             get_ros_parameter( m_ros_node_handle, "r3live_common/image_downsample_ratio", m_image_downsample_ratio, 1.0 );
             get_ros_parameter( m_ros_node_handle, "r3live_common/esikf_iter_times", esikf_iter_times, 2 );
             get_ros_parameter( m_ros_node_handle, "r3live_common/estimate_i2c_extrinsic", m_if_estimate_i2c_extrinsic, 0 );
             get_ros_parameter( m_ros_node_handle, "r3live_common/estimate_intrinsic", m_if_estimate_intrinsic, 0 );
             get_ros_parameter( m_ros_node_handle, "r3live_common/maximum_vio_tracked_pts", m_maximum_vio_tracked_pts, 600 );
         }
-        if ( 1 )
+        if(1)
         {
             scope_color( ANSI_COLOR_GREEN );
             get_ros_parameter( m_ros_node_handle, "r3live_lio/dense_map_enable", dense_map_en, true );
@@ -384,6 +389,7 @@ public:
             get_ros_parameter( m_ros_node_handle, "r3live_lio/voxel_downsample_size_axis_z", m_voxel_downsample_size_axis_z,
                                m_voxel_downsample_size_surf );
             get_ros_parameter( m_ros_node_handle, "r3live_lio/filter_size_map", filter_size_map_min, 0.4 );
+            
             get_ros_parameter( m_ros_node_handle, "r3live_lio/cube_side_length", cube_len, 10000000.0 );
             get_ros_parameter( m_ros_node_handle, "r3live_lio/maximum_pt_kdtree_dis", m_maximum_pt_kdtree_dis, 0.5 );
             get_ros_parameter( m_ros_node_handle, "r3live_lio/maximum_res_dis", m_maximum_res_dis, 0.3 );
@@ -392,7 +398,7 @@ public:
             get_ros_parameter( m_ros_node_handle, "r3live_lio/publish_feature_map", m_if_publish_feature_map, false );
             get_ros_parameter( m_ros_node_handle, "r3live_lio/lio_update_point_step", m_lio_update_point_step, 1 );
         }
-        if ( 1 )
+        if(1)
         {
             scope_color( ANSI_COLOR_BLUE );
             load_vio_parameters();
@@ -430,8 +436,15 @@ public:
     template <typename T>
     void pointBodyToWorld(const Eigen::Matrix<T, 3, 1> &pi, Eigen::Matrix<T, 3, 1> &po)
     {
+        Eigen::Matrix3d R_Lidar_offset_to_IMU;
+        // R_Lidar_offset_to_IMU << -0.9741, 0.2262, 0.0008, -0.2261, -0.9740, 0.0147, 0.0041, 0.0141, 0.9999; // hesai
+        R_Lidar_offset_to_IMU << 1, 0, 0, 0, 1, 0, 0, 0, 1; // ouster
+        
         Eigen::Vector3d p_body(pi[0], pi[1], pi[2]);
-        Eigen::Vector3d p_global(g_lio_state.rot_end * (p_body + Lidar_offset_to_IMU) + g_lio_state.pos_end);
+        Eigen::Vector3d p_global( g_lio_state.rot_end * R_Lidar_offset_to_IMU * p_body + 
+                                  g_lio_state.rot_end * Lidar_offset_to_IMU + 
+                                  g_lio_state.pos_end );
+        // Eigen::Vector3d p_global(g_lio_state.rot_end * (p_body + Lidar_offset_to_IMU) + g_lio_state.pos_end);
         po[0] = p_global(0);
         po[1] = p_global(1);
         po[2] = p_global(2);
